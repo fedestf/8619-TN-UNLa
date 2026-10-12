@@ -49,5 +49,5 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 - Cuentas almacenadas en `datos/usuarios.json`.
 - Contenido almacenado en `datos/catalogos.json`, editable manualmente.
 - Conservación de cuentas y contenido al cerrar la aplicación.
-- Creación automática de los archivos locales a partir de los ejemplos cuando no existen.
-- Exclusión de los archivos locales de datos del repositorio.
+- Creación automática de archivos JSON vacíos cuando no existen.
+- Datos de prueba de usuarios y catálogos incluidos en el repositorio para compartir entre integrantes del equipo.

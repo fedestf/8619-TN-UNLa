@@ -4,7 +4,7 @@ const root=__dirname, sessions=new Map(),types=['cancion','artista','album','pla
 fs.mkdirSync(path.join(root,'datos'),{recursive:true});
 for(const name of ['usuarios','catalogos']){
   const target=path.join(root,'datos',name+'.json');
-  if(!fs.existsSync(target))fs.copyFileSync(path.join(root,'ejemplos',name+'.json'),target);
+  if(!fs.existsSync(target))fs.writeFileSync(target,'[]\n');
 }
 
 function read(name){const data=JSON.parse(fs.readFileSync(path.join(root,'datos',name+'.json'),'utf8').replace(/^\uFEFF/,''));if(!Array.isArray(data))throw Error(name+'.json debe contener una lista JSON.');return data;}

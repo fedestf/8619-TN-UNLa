@@ -27,4 +27,3 @@ goto finish
 node.exe server.cjs
 :finish
 pause
-

@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Administrador",
+    "email": "admin@spotify.com",
+    "role": "admin",
+    "salt": "86eca16348c74ab158e5d01a1d5b2af2",
+    "hash": "53ea48eee5756c549081bd39d5c760996cb657ede5564a524e8e701935fd2944"
+  },
+  {
+    "name": "Usuario",
+    "email": "usuario@spotify.com",
+    "role": "user",
+    "salt": "031384d1b47921b9ad246ed9081b2751",
+    "hash": "445184a363e9c8db7d6c9798e8ba7cd98e0b7f8cc56bb4c6378adccefc178e59"
+  },
+  {
+    "name": "Federico",
+    "email": "fede@gmail.com",
+    "role": "user",
+    "salt": "0da76ea987ac8c763767cb769506d500",
+    "hash": "2083142776fa1a08505138456c8d4d83e61d39ef2732761210ddd6db599e0809"
+  }
+]
