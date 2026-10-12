@@ -1,65 +1,638 @@
 <!doctype html>
 <html lang="es">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Spotify</title>
-<style>
-:root{color-scheme:dark;--green:#1ed760;--muted:#a8b3ac}*{box-sizing:border-box}body{margin:0;background:#101713;color:#f6faf7;font:16px system-ui,sans-serif}header{padding:24px 5vw;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2a3830}.brand{font-size:24px;font-weight:800}.brand span{color:var(--green)}main{max-width:1100px;margin:40px auto;padding:0 24px}h1{font-size:clamp(28px,5vw,44px);margin:12px 0}h2{margin-top:0;font-size:23px}p{line-height:1.6}.muted,small{color:var(--muted)}.tag{font-size:12px;letter-spacing:.12em;color:var(--green);text-transform:uppercase}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.card{background:#18231d;padding:28px;border:1px solid #2a3830;border-radius:18px}label{display:block;margin:16px 0 7px;font-size:14px}input,select,textarea{width:100%;background:#101713;color:inherit;border:1px solid #4a5c50;border-radius:9px;padding:12px;font:inherit}textarea{min-height:180px;font:13px monospace}button{cursor:pointer;background:var(--green);border:0;border-radius:99px;padding:12px 20px;color:#092611;font-weight:750;font-size:14px;margin-top:16px}button.secondary{background:#2c3c32;color:#fff}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #93f4b5;outline-offset:3px}.actions{display:flex;flex-wrap:wrap;gap:10px}.status{min-height:24px;margin-top:14px;font-size:14px}.error{color:#ffb4ab}.success{color:#8debad}[hidden]{display:none!important}.stats{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.stat{background:#26382c;border-radius:10px;padding:12px 16px}.songs{list-style:none;padding:0}.songs li{display:flex;gap:16px;align-items:center;border-top:1px solid #304236;padding:16px 0}.cover{display:grid;place-items:center;flex-shrink:0;width:46px;height:46px;border-radius:10px;background:#294a34;color:var(--green);font-size:24px}.songs strong{display:block}.footer{padding:28px 0;font-size:13px;color:var(--muted)}#logout{margin:0}details{margin-top:18px}summary{cursor:pointer;color:#c8dacf}@media(max-width:720px){.grid{grid-template-columns:1fr}header{gap:12px;flex-wrap:wrap}.card{padding:20px}}
-</style></head>
-<body>
-<header><div class="brand"><span>●</span> Spotify </div><div id="identity" class="muted">Sin sesión iniciada</div><button id="logout" class="secondary" hidden>Cerrar sesión</button></header>
-<main>
-<div class="tag">Una primera experiencia completa</div><h1>Encontrá tu próxima canción.</h1><p class="muted">Registrate, iniciá sesión y buscá canciones en el catálogo.</p>
-<section id="auth" class="grid" aria-label="Acceso a la plataforma">
-<div class="card"><h2>Crear una cuenta</h2><form id="register"><label for="name">Nombre</label><input id="name" autocomplete="name" required maxlength="80"><label for="regEmail">Correo electrónico</label><input id="regEmail" type="email" autocomplete="email" required maxlength="160"><label for="regPass">Contraseña</label><input id="regPass" type="password" autocomplete="new-password" minlength="8" required><small>Al menos 8 caracteres.</small><label for="role">Perfil</label><select id="role"><option value="user">Usuario</option><option value="admin">Administrador de catálogos</option></select><button>Registrarme</button><div id="regStatus" class="status" role="status" aria-live="polite"></div></form></div>
-<div class="card"><h2>Iniciar sesión</h2><form id="login"><label for="email">Correo electrónico</label><input id="email" type="email" autocomplete="username" required><label for="pass">Contraseña</label><input id="pass" type="password" autocomplete="current-password" required><button>Ingresar</button><div id="loginStatus" class="status" role="status" aria-live="polite"></div></form><p class="muted">Para cargar contenido, registrá una cuenta con el perfil de administrador.</p></div>
-</section>
-<section id="workspace" hidden>
-<div class="card"><h2>Explorá el catálogo</h2><form id="search"><label for="query">Nombre de la canción</label><input id="query" type="search" placeholder="Por ejemplo: De música ligera" maxlength="150"><button>Buscar canciones</button></form><div id="searchStatus" class="status" role="status" aria-live="polite"></div><ul id="results" class="songs"></ul></div>
-<section id="admin" class="card" style="margin-top:24px" hidden><h2>Cargar contenido</h2><p class="muted">Incorporá canciones, artistas, álbumes, playlists y podcasts.</p><div id="stats" class="stats"></div><button id="seed">Cargar catálogo de ejemplo</button><form id="import"><label for="catalogFile">Archivo de contenido</label><input id="catalogFile" type="file" accept=".json,application/json" required aria-describedby="fileHelp"><small id="fileHelp">Seleccioná un archivo JSON para incorporar su contenido al catálogo.</small><div><button type="submit">Subir archivo</button></div></form><div id="importStatus" class="status" role="status" aria-live="polite"></div></section>
-</section>
-<div id="globalStatus" class="status" role="status" aria-live="polite"></div>
-
-</main>
-<script>
-'use strict';
-const $=id=>document.getElementById(id);
-const types=['cancion','artista','album','playlist','podcast'];
-const labels={cancion:'Canciones',artista:'Artistas',album:'Álbumes',playlist:'Playlists',podcast:'Podcasts'};
-let state={users:[],catalog:[]},active=null;
-function message(id,text,error=false){$(id).textContent=text;$(id).className='status '+(error?'error':'success');}
-async function api(path,body){const response=await fetch('/api/'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const data=await response.json();if(!response.ok)throw Error(data.error||'No se pudo completar la operación.');return data;}
-async function refresh(){const data=await api('state');state.catalog=data.catalog;active=data.user;}
-function normalize(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
-function hex(buffer){return Array.from(new Uint8Array(buffer),b=>b.toString(16).padStart(2,'0')).join('');}
-async function digest(pass,salt){if(!crypto.subtle)throw Error('Este navegador no permite generar credenciales locales. Probá abrir el archivo en Chrome o Edge.');const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveBits']);return hex(await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:100000,hash:'SHA-256'},material,256));}
-function render(){const signed=!!active;$('auth').hidden=signed;$('workspace').hidden=!signed;$('logout').hidden=!signed;$('admin').hidden=!signed||active.role!=='admin';$('identity').textContent=signed?active.name+' · '+(active.role==='admin'?'Administrador':'Usuario'):'Sin sesión iniciada';if(signed){renderStats();findSongs(false);}}
-function requireSession(){if(!active){message('globalStatus','Iniciá sesión para acceder a esta funcionalidad.',true);render();return false;}return true;}
-function renderStats(){$('stats').replaceChildren();for(const type of types){const node=document.createElement('div');node.className='stat';node.textContent=labels[type]+': '+state.catalog.filter(x=>x.type===type).length;$('stats').append(node);}}
-function findSongs(submitted=true){if(!requireSession())return;const term=normalize($('query').value);$('results').replaceChildren();if(!term){message('searchStatus',submitted?'Ingresá el nombre de una canción para buscar.':state.catalog.some(x=>x.type==='cancion')?'El catálogo está listo. Buscá una canción por su nombre.':'Todavía no hay canciones. Un administrador debe cargar el catálogo.',submitted);return;}const found=state.catalog.filter(x=>x.type==='cancion'&&normalize(x.title).includes(term));message('searchStatus',found.length?found.length+' canción'+(found.length===1?' encontrada.':'es encontradas.'):'No se encontraron canciones relacionadas con “'+$('query').value.trim()+'”.');for(const item of found){const li=document.createElement('li'),cover=document.createElement('div'),info=document.createElement('div'),title=document.createElement('strong'),artist=document.createElement('span');cover.className='cover';cover.textContent='♫';cover.setAttribute('aria-hidden','true');title.textContent=item.title;artist.className='muted';artist.textContent=item.artist;info.append(title,artist);li.append(cover,info);$('results').append(li);}}
-$('register').addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{await api('register',{name:$('name').value,email:$('regEmail').value,password:$('regPass').value,role:$('role').value});await refresh();e.target.reset();render();message('globalStatus','Cuenta creada correctamente.');}catch(err){message('regStatus',err.message,true);}finally{button.disabled=false;}});
-$('login').addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{await api('login',{email:$('email').value,password:$('pass').value});await refresh();e.target.reset();render();message('globalStatus','Sesión iniciada correctamente.');}catch(err){message('loginStatus',err.message,true);}finally{button.disabled=false;}});
-$('logout').addEventListener('click',async()=>{try{await api('logout',{});active=null;$('query').value='';$('results').replaceChildren();render();message('globalStatus','Sesión cerrada.');}catch(err){message('globalStatus',err.message,true);}});
-$('search').addEventListener('submit',async e=>{e.preventDefault();try{await refresh();renderStats();findSongs();}catch(err){message('searchStatus',err.message,true);}});
-async function loadCatalog(records){const result=await api('catalog',{records});await refresh();renderStats();findSongs(false);message('importStatus',result.added+' registros cargados · '+result.duplicates+' duplicados omitidos.');}
-const sample=[{id:'ar1',type:'artista',title:'Soda Stereo'},{id:'ar2',type:'artista',title:'Gustavo Cerati'},{id:'ar3',type:'artista',title:'Charly García'},{id:'al1',type:'album',title:'Canción animal'},{id:'al2',type:'album',title:'Bocanada'},{id:'pl1',type:'playlist',title:'Rock argentino'},{id:'po1',type:'podcast',title:'Historias de música'},{id:'c1',type:'cancion',title:'De música ligera',artist:'Soda Stereo'},{id:'c2',type:'cancion',title:'Persiana americana',artist:'Soda Stereo'},{id:'c3',type:'cancion',title:'Puente',artist:'Gustavo Cerati'},{id:'c4',type:'cancion',title:'Crimen',artist:'Gustavo Cerati'},{id:'c5',type:'cancion',title:'Demoliendo hoteles',artist:'Charly García'}];
-$('seed').addEventListener('click',async()=>{try{await loadCatalog(sample);}catch(err){message('importStatus',err.message,true);}});
-$('import').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const button=e.submitter;
-  button.disabled=true;
-  try{
-    const file=$('catalogFile').files[0];
-    if(!file)throw Error('Seleccioná un archivo JSON.');
-    if(!file.name.toLowerCase().endsWith('.json'))throw Error('Seleccioná un archivo con extensión .json.');
-    if(file.size>1000000)throw Error('El archivo debe pesar menos de 1 MB.');
-    let records;
-    try{records=JSON.parse((await file.text()).replace(/^\uFEFF/,''));}
-    catch{throw Error('El archivo no contiene un JSON válido. Revisá su formato.');}
-    await loadCatalog(records);
-    e.target.reset();
-  }catch(err){message('importStatus',err.message,true);}
-  finally{button.disabled=false;}
-});
-refresh().then(render).catch(err=>message('globalStatus',err.message,true));
-</script></body></html>
+  <head>
+    <meta charset="utf-8" /><meta
+      name="viewport"
+      content="width=device-width,initial-scale=1"
+    />
+    <title>Spotify</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --green: #1ed760;
+        --muted: #a8b3ac;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #101713;
+        color: #f6faf7;
+        font:
+          16px system-ui,
+          sans-serif;
+      }
+      header {
+        padding: 24px 5vw;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #2a3830;
+      }
+      .brand {
+        font-size: 24px;
+        font-weight: 800;
+      }
+      .brand span {
+        color: var(--green);
+      }
+      main {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 24px;
+      }
+      h1 {
+        font-size: clamp(28px, 5vw, 44px);
+        margin: 12px 0;
+      }
+      h2 {
+        margin-top: 0;
+        font-size: 23px;
+      }
+      p {
+        line-height: 1.6;
+      }
+      .muted,
+      small {
+        color: var(--muted);
+      }
+      .tag {
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        color: var(--green);
+        text-transform: uppercase;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .card {
+        background: #18231d;
+        padding: 28px;
+        border: 1px solid #2a3830;
+        border-radius: 18px;
+      }
+      label {
+        display: block;
+        margin: 16px 0 7px;
+        font-size: 14px;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        background: #101713;
+        color: inherit;
+        border: 1px solid #4a5c50;
+        border-radius: 9px;
+        padding: 12px;
+        font: inherit;
+      }
+      textarea {
+        min-height: 180px;
+        font: 13px monospace;
+      }
+      button {
+        cursor: pointer;
+        background: var(--green);
+        border: 0;
+        border-radius: 99px;
+        padding: 12px 20px;
+        color: #092611;
+        font-weight: 750;
+        font-size: 14px;
+        margin-top: 16px;
+      }
+      button.secondary {
+        background: #2c3c32;
+        color: #fff;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible {
+        outline: 3px solid #93f4b5;
+        outline-offset: 3px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .status {
+        min-height: 24px;
+        margin-top: 14px;
+        font-size: 14px;
+      }
+      .error {
+        color: #ffb4ab;
+      }
+      .success {
+        color: #8debad;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .stats {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      .stat {
+        background: #26382c;
+        border-radius: 10px;
+        padding: 12px 16px;
+      }
+      .songs {
+        list-style: none;
+        padding: 0;
+      }
+      .songs li {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        border-top: 1px solid #304236;
+        padding: 16px 0;
+      }
+      .cover {
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        background: #294a34;
+        color: var(--green);
+        font-size: 24px;
+      }
+      .songs strong {
+        display: block;
+      }
+      .footer {
+        padding: 28px 0;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      #logout {
+        margin: 0;
+      }
+      details {
+        margin-top: 18px;
+      }
+      summary {
+        cursor: pointer;
+        color: #c8dacf;
+      }
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        header {
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+        .card {
+          padding: 20px;
+        }
+      }
+    </style></head
+  >
+  <body>
+    <header
+      ><div class="brand"><span>●</span> Spotify </div
+      ><div id="identity" class="muted">Sin sesión iniciada</div
+      ><button id="logout" class="secondary" hidden
+        >Cerrar sesión</button
+      ></header
+    >
+    <main>
+      <div class="tag">Una primera experiencia completa</div
+      ><h1>Encontrá tu próxima canción.</h1
+      ><p class="muted"
+        >Registrate, iniciá sesión y buscá canciones en el catálogo.</p
+      >
+      <section id="auth" class="grid" aria-label="Acceso a la plataforma">
+        <div class="card"
+          ><h2>Crear una cuenta</h2
+          ><form id="register"
+            ><label for="name">Nombre</label
+            ><input
+              id="name"
+              autocomplete="name"
+              required
+              maxlength="80" /><label for="regEmail">Correo electrónico</label
+            ><input
+              id="regEmail"
+              type="email"
+              autocomplete="email"
+              required
+              maxlength="160" /><label for="regPass">Contraseña</label
+            ><input
+              id="regPass"
+              type="password"
+              autocomplete="new-password"
+              minlength="8"
+              required /><small>Al menos 8 caracteres.</small
+            ><label for="role">Perfil</label
+            ><select id="role"
+              ><option value="user">Usuario</option
+              ><option value="admin">Administrador de catálogos</option></select
+            ><button>Registrarme</button
+            ><div
+              id="regStatus"
+              class="status"
+              role="status"
+              aria-live="polite"
+            ></div></form
+        ></div>
+        <div class="card"
+          ><h2>Iniciar sesión</h2
+          ><form id="login"
+            ><label for="email">Correo electrónico</label
+            ><input
+              id="email"
+              type="email"
+              autocomplete="username"
+              required /><label for="pass">Contraseña</label
+            ><input
+              id="pass"
+              type="password"
+              autocomplete="current-password"
+              required /><button>Ingresar</button
+            ><div
+              id="loginStatus"
+              class="status"
+              role="status"
+              aria-live="polite"
+            ></div></form
+          ><p class="muted"
+            >Para cargar contenido, registrá una cuenta con el perfil de
+            administrador.</p
+          ></div
+        >
+      </section>
+      <section id="workspace" hidden>
+        <div class="card"
+          ><h2>Explorá el catálogo</h2
+          ><form id="search"
+            ><label for="query">Nombre de la canción</label
+            ><input
+              id="query"
+              type="search"
+              placeholder="Por ejemplo: De música ligera"
+              maxlength="150"
+            /><button>Buscar canciones</button></form
+          ><div
+            id="searchStatus"
+            class="status"
+            role="status"
+            aria-live="polite"
+          ></div
+          ><ul id="results" class="songs"></ul
+        ></div>
+        <section id="admin" class="card" style="margin-top: 24px" hidden
+          ><h2>Cargar contenido</h2
+          ><p class="muted"
+            >Incorporá canciones, artistas, álbumes, playlists y podcasts.</p
+          ><div id="stats" class="stats"></div
+          ><button id="seed">Cargar catálogo de ejemplo</button
+          ><form id="import"
+            ><label for="catalogFile">Archivo de contenido</label
+            ><input
+              id="catalogFile"
+              type="file"
+              accept=".json,application/json"
+              required
+              aria-describedby="fileHelp"
+            /><small id="fileHelp"
+              >Seleccioná un archivo JSON para incorporar su contenido al
+              catálogo.</small
+            ><div><button type="submit">Subir archivo</button></div></form
+          ><div
+            id="importStatus"
+            class="status"
+            role="status"
+            aria-live="polite"
+          ></div
+        ></section>
+      </section>
+      <div
+        id="globalStatus"
+        class="status"
+        role="status"
+        aria-live="polite"
+      ></div>
+    </main>
+    <script>
+      'use strict';
+      const $ = (id) => document.getElementById(id);
+      const types = ['cancion', 'artista', 'album', 'playlist', 'podcast'];
+      const labels = {
+        cancion: 'Canciones',
+        artista: 'Artistas',
+        album: 'Álbumes',
+        playlist: 'Playlists',
+        podcast: 'Podcasts',
+      };
+      let state = { users: [], catalog: [] },
+        active = null;
+      function message(id, text, error = false) {
+        $(id).textContent = text;
+        $(id).className = 'status ' + (error ? 'error' : 'success');
+      }
+      async function api(path, body) {
+        const response = await fetch('/api/' + path, {
+          method: body === undefined ? 'GET' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+        const data = await response.json();
+        if (!response.ok)
+          throw Error(data.error || 'No se pudo completar la operación.');
+        return data;
+      }
+      async function refresh() {
+        const data = await api('state');
+        state.catalog = data.catalog;
+        active = data.user;
+      }
+      function normalize(s) {
+        return s
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .trim();
+      }
+      function hex(buffer) {
+        return Array.from(new Uint8Array(buffer), (b) =>
+          b.toString(16).padStart(2, '0'),
+        ).join('');
+      }
+      async function digest(pass, salt) {
+        if (!crypto.subtle)
+          throw Error(
+            'Este navegador no permite generar credenciales locales. Probá abrir el archivo en Chrome o Edge.',
+          );
+        const material = await crypto.subtle.importKey(
+          'raw',
+          new TextEncoder().encode(pass),
+          'PBKDF2',
+          false,
+          ['deriveBits'],
+        );
+        return hex(
+          await crypto.subtle.deriveBits(
+            {
+              name: 'PBKDF2',
+              salt: new TextEncoder().encode(salt),
+              iterations: 100000,
+              hash: 'SHA-256',
+            },
+            material,
+            256,
+          ),
+        );
+      }
+      function render() {
+        const signed = !!active;
+        $('auth').hidden = signed;
+        $('workspace').hidden = !signed;
+        $('logout').hidden = !signed;
+        $('admin').hidden = !signed || active.role !== 'admin';
+        $('identity').textContent = signed
+          ? active.name +
+            ' · ' +
+            (active.role === 'admin' ? 'Administrador' : 'Usuario')
+          : 'Sin sesión iniciada';
+        if (signed) {
+          renderStats();
+          findSongs(false);
+        }
+      }
+      function requireSession() {
+        if (!active) {
+          message(
+            'globalStatus',
+            'Iniciá sesión para acceder a esta funcionalidad.',
+            true,
+          );
+          render();
+          return false;
+        }
+        return true;
+      }
+      function renderStats() {
+        $('stats').replaceChildren();
+        for (const type of types) {
+          const node = document.createElement('div');
+          node.className = 'stat';
+          node.textContent =
+            labels[type] +
+            ': ' +
+            state.catalog.filter((x) => x.type === type).length;
+          $('stats').append(node);
+        }
+      }
+      function findSongs(submitted = true) {
+        if (!requireSession()) return;
+        const term = normalize($('query').value);
+        $('results').replaceChildren();
+        if (!term) {
+          message(
+            'searchStatus',
+            submitted
+              ? 'Ingresá el nombre de una canción para buscar.'
+              : state.catalog.some((x) => x.type === 'cancion')
+                ? 'El catálogo está listo. Buscá una canción por su nombre.'
+                : 'Todavía no hay canciones. Un administrador debe cargar el catálogo.',
+            submitted,
+          );
+          return;
+        }
+        const found = state.catalog.filter(
+          (x) => x.type === 'cancion' && normalize(x.title).includes(term),
+        );
+        message(
+          'searchStatus',
+          found.length
+            ? found.length +
+                ' canción' +
+                (found.length === 1 ? ' encontrada.' : 'es encontradas.')
+            : 'No se encontraron canciones relacionadas con “' +
+                $('query').value.trim() +
+                '”.',
+        );
+        for (const item of found) {
+          const li = document.createElement('li'),
+            cover = document.createElement('div'),
+            info = document.createElement('div'),
+            title = document.createElement('strong'),
+            artist = document.createElement('span');
+          cover.className = 'cover';
+          cover.textContent = '♫';
+          cover.setAttribute('aria-hidden', 'true');
+          title.textContent = item.title;
+          artist.className = 'muted';
+          artist.textContent = item.artist;
+          info.append(title, artist);
+          li.append(cover, info);
+          $('results').append(li);
+        }
+      }
+      $('register').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const button = e.submitter;
+        button.disabled = true;
+        try {
+          await api('register', {
+            name: $('name').value,
+            email: $('regEmail').value,
+            password: $('regPass').value,
+            role: $('role').value,
+          });
+          await refresh();
+          e.target.reset();
+          render();
+          message('globalStatus', 'Cuenta creada correctamente.');
+        } catch (err) {
+          message('regStatus', err.message, true);
+        } finally {
+          button.disabled = false;
+        }
+      });
+      $('login').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const button = e.submitter;
+        button.disabled = true;
+        try {
+          await api('login', {
+            email: $('email').value,
+            password: $('pass').value,
+          });
+          await refresh();
+          e.target.reset();
+          render();
+          message('globalStatus', 'Sesión iniciada correctamente.');
+        } catch (err) {
+          message('loginStatus', err.message, true);
+        } finally {
+          button.disabled = false;
+        }
+      });
+      $('logout').addEventListener('click', async () => {
+        try {
+          await api('logout', {});
+          active = null;
+          $('query').value = '';
+          $('results').replaceChildren();
+          render();
+          message('globalStatus', 'Sesión cerrada.');
+        } catch (err) {
+          message('globalStatus', err.message, true);
+        }
+      });
+      $('search').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          await refresh();
+          renderStats();
+          findSongs();
+        } catch (err) {
+          message('searchStatus', err.message, true);
+        }
+      });
+      async function loadCatalog(records) {
+        const result = await api('catalog', { records });
+        await refresh();
+        renderStats();
+        findSongs(false);
+        message(
+          'importStatus',
+          result.added +
+            ' registros cargados · ' +
+            result.duplicates +
+            ' duplicados omitidos.',
+        );
+      }
+      const sample = [
+        { id: 'ar1', type: 'artista', title: 'Soda Stereo' },
+        { id: 'ar2', type: 'artista', title: 'Gustavo Cerati' },
+        { id: 'ar3', type: 'artista', title: 'Charly García' },
+        { id: 'al1', type: 'album', title: 'Canción animal' },
+        { id: 'al2', type: 'album', title: 'Bocanada' },
+        { id: 'pl1', type: 'playlist', title: 'Rock argentino' },
+        { id: 'po1', type: 'podcast', title: 'Historias de música' },
+        {
+          id: 'c1',
+          type: 'cancion',
+          title: 'De música ligera',
+          artist: 'Soda Stereo',
+        },
+        {
+          id: 'c2',
+          type: 'cancion',
+          title: 'Persiana americana',
+          artist: 'Soda Stereo',
+        },
+        {
+          id: 'c3',
+          type: 'cancion',
+          title: 'Puente',
+          artist: 'Gustavo Cerati',
+        },
+        {
+          id: 'c4',
+          type: 'cancion',
+          title: 'Crimen',
+          artist: 'Gustavo Cerati',
+        },
+        {
+          id: 'c5',
+          type: 'cancion',
+          title: 'Demoliendo hoteles',
+          artist: 'Charly García',
+        },
+      ];
+      $('seed').addEventListener('click', async () => {
+        try {
+          await loadCatalog(sample);
+        } catch (err) {
+          message('importStatus', err.message, true);
+        }
+      });
+      $('import').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const button = e.submitter;
+        button.disabled = true;
+        try {
+          const file = $('catalogFile').files[0];
+          if (!file) throw Error('Seleccioná un archivo JSON.');
+          if (!file.name.toLowerCase().endsWith('.json'))
+            throw Error('Seleccioná un archivo con extensión .json.');
+          if (file.size > 1000000)
+            throw Error('El archivo debe pesar menos de 1 MB.');
+          let records;
+          try {
+            records = JSON.parse((await file.text()).replace(/^\uFEFF/, ''));
+          } catch {
+            throw Error(
+              'El archivo no contiene un JSON válido. Revisá su formato.',
+            );
+          }
+          await loadCatalog(records);
+          e.target.reset();
+        } catch (err) {
+          message('importStatus', err.message, true);
+        } finally {
+          button.disabled = false;
+        }
+      });
+      refresh()
+        .then(render)
+        .catch((err) => message('globalStatus', err.message, true));
+    </script></body
+  ></html
+>
