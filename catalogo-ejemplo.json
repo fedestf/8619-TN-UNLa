@@ -1,0 +1,34 @@
+[
+  {
+    "id": "ej-artista-1",
+    "type": "artista",
+    "title": "Fito Páez"
+  },
+  {
+    "id": "ej-album-1",
+    "type": "album",
+    "title": "El amor después del amor"
+  },
+  {
+    "id": "ej-playlist-1",
+    "type": "playlist",
+    "title": "Clásicos del rock nacional"
+  },
+  {
+    "id": "ej-podcast-1",
+    "type": "podcast",
+    "title": "Conversaciones sobre música"
+  },
+  {
+    "id": "ej-cancion-1",
+    "type": "cancion",
+    "title": "El amor después del amor",
+    "artist": "Fito Páez"
+  },
+  {
+    "id": "ej-cancion-2",
+    "type": "cancion",
+    "title": "A rodar mi vida",
+    "artist": "Fito Páez"
+  }
+]

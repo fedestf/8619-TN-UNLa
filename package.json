@@ -1,0 +1,12 @@
+{
+  "name": "spotify-equipo-03",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lean Inception - Spotify - Equipo 03",
+  "scripts": {
+    "start": "node server.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,99 @@
+[
+  {
+    "id": "ar1",
+    "type": "artista",
+    "title": "Soda Stereo"
+  },
+  {
+    "id": "ar2",
+    "type": "artista",
+    "title": "Gustavo Cerati"
+  },
+  {
+    "id": "ar3",
+    "type": "artista",
+    "title": "Charly García"
+  },
+  {
+    "id": "al1",
+    "type": "album",
+    "title": "Canción animal"
+  },
+  {
+    "id": "al2",
+    "type": "album",
+    "title": "Bocanada"
+  },
+  {
+    "id": "pl1",
+    "type": "playlist",
+    "title": "Rock argentino"
+  },
+  {
+    "id": "po1",
+    "type": "podcast",
+    "title": "Historias de música"
+  },
+  {
+    "id": "c1",
+    "type": "cancion",
+    "title": "De música ligera",
+    "artist": "Soda Stereo"
+  },
+  {
+    "id": "c2",
+    "type": "cancion",
+    "title": "Persiana americana",
+    "artist": "Soda Stereo"
+  },
+  {
+    "id": "c3",
+    "type": "cancion",
+    "title": "Puente",
+    "artist": "Gustavo Cerati"
+  },
+  {
+    "id": "c4",
+    "type": "cancion",
+    "title": "Crimen",
+    "artist": "Gustavo Cerati"
+  },
+  {
+    "id": "c5",
+    "type": "cancion",
+    "title": "Demoliendo hoteles",
+    "artist": "Charly García"
+  },
+  {
+    "id": "ej-artista-1",
+    "type": "artista",
+    "title": "Fito Páez"
+  },
+  {
+    "id": "ej-album-1",
+    "type": "album",
+    "title": "El amor después del amor"
+  },
+  {
+    "id": "ej-playlist-1",
+    "type": "playlist",
+    "title": "Clásicos del rock nacional"
+  },
+  {
+    "id": "ej-podcast-1",
+    "type": "podcast",
+    "title": "Conversaciones sobre música"
+  },
+  {
+    "id": "ej-cancion-1",
+    "type": "cancion",
+    "title": "El amor después del amor",
+    "artist": "Fito Páez"
+  },
+  {
+    "id": "ej-cancion-2",
+    "type": "cancion",
+    "title": "A rodar mi vida",
+    "artist": "Fito Páez"
+  }
+]
