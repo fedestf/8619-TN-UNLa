@@ -248,6 +248,52 @@ function createServer({ rootDir = __dirname } = {}) {
         );
       }
 
+      const requestUrl = new URL(req.url, 'http://localhost');
+      if (requestUrl.pathname === '/api/search/artists') {
+        if (!user) fail(401, 'Iniciá sesión para buscar artistas.');
+        if (req.method !== 'GET') fail(405, 'Método no permitido.');
+        const criteria = requestUrl.searchParams.getAll('q');
+        const query = criteria.length === 1 ? criteria[0].trim() : '';
+        if (!query || query.length > 150 || !/[\p{L}\p{N}]/u.test(query)) {
+          fail(
+            400,
+            'Proporcioná un nombre de artista válido para realizar la búsqueda.',
+          );
+        }
+        const normalize = (value) =>
+          value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+        const term = normalize(query);
+        const catalog = read('catalogos');
+        const songs = catalog.filter(
+          (item) =>
+            item.type === 'cancion' &&
+            typeof item.artist === 'string' &&
+            normalize(item.artist).includes(term),
+        );
+        const names = catalog
+          .filter(
+            (item) =>
+              item.type === 'artista' &&
+              typeof item.title === 'string' &&
+              normalize(item.title).includes(term),
+          )
+          .map((item) => item.title.trim());
+        names.push(...songs.map((item) => item.artist.trim()));
+        const artists = [
+          ...new Map(names.map((name) => [normalize(name), { name }])).values(),
+        ];
+        return res.end(
+          JSON.stringify({
+            artists,
+            songs: songs.map((item) => describe(item, catalog)),
+          }),
+        );
+      }
+
       const mediaRoute =
         /^\/api\/(content|audio)\/(cancion|podcast|playlist)\/([^/]+)$/.exec(
           req.url,
@@ -431,3 +477,4 @@ if (require.main === module) {
   );
 }
 module.exports = { createServer };
+
