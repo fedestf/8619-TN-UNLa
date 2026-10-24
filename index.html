@@ -313,10 +313,6 @@
           ></div>
           <ul id="results" class="songs"></ul>
         </div>
-        <section class="card player" aria-labelledby="listenHeading">
-          <h2 id="listenHeading">Podcasts y playlists</h2>
-          <ul id="listening" class="songs"></ul>
-        </section>
         <section
           id="player"
           class="card player"
@@ -455,7 +451,7 @@
           : 'Sin sesión iniciada';
         if (signed) {
           renderStats();
-          renderListening();
+
           findSongs(false);
         }
       }
@@ -574,29 +570,8 @@
         button.addEventListener('click', () => selectContent(item));
         return button;
       }
-      function renderListening() {
-        $('listening').replaceChildren();
-        const items = state.catalog.filter((x) =>
-          ['podcast', 'playlist'].includes(x.type),
-        );
-        for (const item of items) {
-          const li = document.createElement('li');
-          const info = document.createElement('div');
-          info.className = 'song-info';
-          const title = document.createElement('strong');
-          title.textContent = item.title;
-          const type = document.createElement('span');
-          type.textContent = item.type === 'playlist' ? 'Playlist' : 'Podcast';
-          type.className = 'muted';
-          info.append(title, type);
-          li.append(info, playButton(item));
-          $('listening').append(li);
-        }
-        if (!items.length)
-          $('listening').textContent = 'Todavía no hay podcasts ni playlists.';
-      }
       async function selectContent(item) {
-        if (!requireSession()) return;
+        if (!requireSession() || item.type !== 'cancion') return;
         stopPlayback();
         const version = playbackVersion;
         $('player').hidden = false;
@@ -780,7 +755,7 @@
         const result = await api('catalog', { records });
         await refresh();
         renderStats();
-        renderListening();
+
         findSongs(false);
         message(
           'importStatus',
@@ -869,3 +844,4 @@
     </script>
   </body>
 </html>
+
