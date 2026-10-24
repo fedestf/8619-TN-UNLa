@@ -1,50 +1,21 @@
 [
   {
-    "id": "prueba-c1",
+    "id": "c1",
     "type": "cancion",
-    "title": "Pista de prueba 1",
-    "artist": "Equipo 03",
-    "album": "Audio de prueba",
-    "duration": 6,
-    "available": true,
-    "audioFile": "prueba-1.wav"
+    "title": "De música ligera",
+    "artist": "Soda Stereo"
   },
   {
-    "id": "prueba-c2",
+    "id": "c2",
     "type": "cancion",
-    "title": "Pista de prueba 2",
-    "artist": "Equipo 03",
-    "album": "Audio de prueba",
-    "duration": 6,
-    "available": true,
-    "audioFile": "prueba-2.wav"
+    "title": "Persiana americana",
+    "artist": "Soda Stereo"
   },
   {
-    "id": "prueba-p1",
-    "type": "podcast",
-    "title": "Episodio de prueba",
-    "artist": "Equipo 03",
-    "duration": 6,
-    "available": true,
-    "audioFile": "prueba-1.wav"
-  },
-  {
-    "id": "prueba-lista",
-    "type": "playlist",
-    "title": "Lista de reproducción de prueba",
-    "items": [
-      {
-        "id": "prueba-c1",
-        "type": "cancion"
-      },
-      {
-        "id": "prueba-c2",
-        "type": "cancion"
-      },
-      {
-        "id": "prueba-p1",
-        "type": "podcast"
-      }
-    ]
+    "id": "c3",
+    "type": "cancion",
+    "title": "Puente",
+    "artist": "Gustavo Cerati"
   }
 ]
+
