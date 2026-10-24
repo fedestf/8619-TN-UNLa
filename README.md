@@ -83,3 +83,25 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 - Playlists con una lista ordenada `items`, cuyas referencias contienen `id` y `type` (`cancion` o `podcast`).
 - Validación de rutas para impedir el acceso a archivos fuera de la carpeta de audio.
 
+### US04 — Búsqueda por artista
+
+- Selección de búsqueda por canción o por artista.
+- Resultados agrupados por nombre de artista, con sus canciones y la opción de reproducirlas.
+- Coincidencias parciales sin distinguir mayúsculas ni tildes.
+- Mensajes para búsquedas sin criterio o sin artistas coincidentes.
+
+### US40 — Backend: búsqueda por artista
+
+- Endpoint autenticado `GET /api/search/artists?q=nombre`.
+- Respuesta con `artists` (nombres sin duplicados) y `songs` (canciones con identificador, título, artista, duración y disponibilidad).
+- Artistas obtenidos del catálogo de artistas y de las canciones existentes, sin requerir registros duplicados.
+- Validación del criterio de búsqueda y respuesta vacía cuando no hay coincidencias.
+- Lectura del catálogo actualizado en cada consulta.
+
+### US11 — Subir y bajar volumen
+
+- Botones para bajar y subir el volumen en pasos de diez puntos porcentuales.
+- Control deslizante de volumen entre 0% y 100%, con porcentaje visible.
+- Cambio del volumen del audio activo sin detenerlo ni reiniciar su posición.
+- Conservación del nivel al pausar, reanudar o cambiar de canción durante la sesión de la página.
+
