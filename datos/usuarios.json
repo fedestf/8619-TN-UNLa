@@ -26,5 +26,13 @@
     "role": "admin",
     "salt": "a8669121a68522ce293398dc1b22dce8",
     "hash": "e8f3497221c3bcd0327ac842fd334d08484a80a81f4449de1c83bcbd99b1e0ec"
+  },
+  {
+    "name": "fede",
+    "email": "unla@unla.com",
+    "role": "user",
+    "salt": "9131dc22b766f53e632ca541f7079985",
+    "hash": "fda5ab16da52184b43b56f2f242e8da8002cf6a0b9fad6ab1fa406efa94e358a"
   }
 ]
+
