@@ -19,5 +19,12 @@
     "role": "user",
     "salt": "0da76ea987ac8c763767cb769506d500",
     "hash": "2083142776fa1a08505138456c8d4d83e61d39ef2732761210ddd6db599e0809"
+  },
+  {
+    "name": "federico123",
+    "email": "fedeadmin@gmail.com",
+    "role": "admin",
+    "salt": "a8669121a68522ce293398dc1b22dce8",
+    "hash": "e8f3497221c3bcd0327ac842fd334d08484a80a81f4449de1c83bcbd99b1e0ec"
   }
 ]

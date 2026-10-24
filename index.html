@@ -1,10 +1,8 @@
 <!doctype html>
 <html lang="es">
   <head>
-    <meta charset="utf-8" /><meta
-      name="viewport"
-      content="width=device-width,initial-scale=1"
-    />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Spotify</title>
     <style>
       :root {
@@ -198,109 +196,155 @@
           padding: 20px;
         }
       }
-    </style></head
-  >
+      .song-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .songs li {
+        flex-wrap: wrap;
+      }
+      .songs button {
+        margin-top: 0;
+      }
+      .player {
+        margin-top: 24px;
+      }
+      #playerTitle {
+        margin-bottom: 8px;
+      }
+    </style>
+  </head>
   <body>
-    <header
-      ><div class="brand"><span>●</span> Spotify </div
-      ><div id="identity" class="muted">Sin sesión iniciada</div
-      ><button id="logout" class="secondary" hidden
-        >Cerrar sesión</button
-      ></header
-    >
+    <header>
+      <div class="brand"><span>●</span> Spotify</div>
+      <div id="identity" class="muted">Sin sesión iniciada</div>
+      <button id="logout" class="secondary" hidden>Cerrar sesión</button>
+    </header>
     <main>
-      <div class="tag">Una primera experiencia completa</div
-      ><h1>Encontrá tu próxima canción.</h1
-      ><p class="muted"
-        >Registrate, iniciá sesión y buscá canciones en el catálogo.</p
-      >
+      <div class="tag">Una primera experiencia completa</div>
+      <h1>Encontrá tu próxima canción.</h1>
+      <p class="muted">
+        Registrate, iniciá sesión y buscá canciones en el catálogo.
+      </p>
       <section id="auth" class="grid" aria-label="Acceso a la plataforma">
-        <div class="card"
-          ><h2>Crear una cuenta</h2
-          ><form id="register"
-            ><label for="name">Nombre</label
+        <div class="card">
+          <h2>Crear una cuenta</h2>
+          <form id="register">
+            <label for="name">Nombre</label
             ><input
               id="name"
               autocomplete="name"
               required
-              maxlength="80" /><label for="regEmail">Correo electrónico</label
+              maxlength="80"
+            /><label for="regEmail">Correo electrónico</label
             ><input
               id="regEmail"
               type="email"
               autocomplete="email"
               required
-              maxlength="160" /><label for="regPass">Contraseña</label
+              maxlength="160"
+            /><label for="regPass">Contraseña</label
             ><input
               id="regPass"
               type="password"
               autocomplete="new-password"
               minlength="8"
-              required /><small>Al menos 8 caracteres.</small
+              required
+            /><small>Al menos 8 caracteres.</small
             ><label for="role">Perfil</label
-            ><select id="role"
-              ><option value="user">Usuario</option
-              ><option value="admin">Administrador de catálogos</option></select
-            ><button>Registrarme</button
-            ><div
+            ><select id="role">
+              <option value="user">Usuario</option>
+              <option value="admin">Administrador de catálogos</option></select
+            ><button>Registrarme</button>
+            <div
               id="regStatus"
               class="status"
               role="status"
               aria-live="polite"
-            ></div></form
-        ></div>
-        <div class="card"
-          ><h2>Iniciar sesión</h2
-          ><form id="login"
-            ><label for="email">Correo electrónico</label
+            ></div>
+          </form>
+        </div>
+        <div class="card">
+          <h2>Iniciar sesión</h2>
+          <form id="login">
+            <label for="email">Correo electrónico</label
             ><input
               id="email"
               type="email"
               autocomplete="username"
-              required /><label for="pass">Contraseña</label
+              required
+            /><label for="pass">Contraseña</label
             ><input
               id="pass"
               type="password"
               autocomplete="current-password"
-              required /><button>Ingresar</button
-            ><div
+              required
+            /><button>Ingresar</button>
+            <div
               id="loginStatus"
               class="status"
               role="status"
               aria-live="polite"
-            ></div></form
-          ><p class="muted"
-            >Para cargar contenido, registrá una cuenta con el perfil de
-            administrador.</p
-          ></div
-        >
+            ></div>
+          </form>
+          <p class="muted">
+            Para cargar contenido, registrá una cuenta con el perfil de
+            administrador.
+          </p>
+        </div>
       </section>
       <section id="workspace" hidden>
-        <div class="card"
-          ><h2>Explorá el catálogo</h2
-          ><form id="search"
-            ><label for="query">Nombre de la canción</label
+        <div class="card">
+          <h2>Explorá el catálogo</h2>
+          <form id="search">
+            <label for="query">Nombre de la canción</label
             ><input
               id="query"
               type="search"
               placeholder="Por ejemplo: De música ligera"
               maxlength="150"
-            /><button>Buscar canciones</button></form
-          ><div
+            /><button>Buscar canciones</button>
+          </form>
+          <div
             id="searchStatus"
             class="status"
             role="status"
             aria-live="polite"
-          ></div
-          ><ul id="results" class="songs"></ul
-        ></div>
-        <section id="admin" class="card" style="margin-top: 24px" hidden
-          ><h2>Cargar contenido</h2
-          ><p class="muted"
-            >Incorporá canciones, artistas, álbumes, playlists y podcasts.</p
-          ><div id="stats" class="stats"></div
-          ><button id="seed">Cargar catálogo de ejemplo</button
-          ><form id="import"
-            ><label for="catalogFile">Archivo de contenido</label
+          ></div>
+          <ul id="results" class="songs"></ul>
+        </div>
+        <section class="card player" aria-labelledby="listenHeading">
+          <h2 id="listenHeading">Podcasts y playlists</h2>
+          <ul id="listening" class="songs"></ul>
+        </section>
+        <section
+          id="player"
+          class="card player"
+          aria-labelledby="playerHeading"
+          hidden
+        >
+          <h2 id="playerHeading">Reproductor</h2>
+          <h3 id="playerTitle"></h3>
+          <p id="playerDetails" class="muted"></p>
+          <audio id="audio" preload="metadata"></audio>
+          <button id="playPause" type="button" disabled>Reproducir</button>
+          <p id="playbackTime" class="muted">0:00 / 0:00</p>
+          <div
+            id="playerStatus"
+            class="status"
+            role="status"
+            aria-live="polite"
+          ></div>
+        </section>
+        <section id="admin" class="card" style="margin-top: 24px" hidden>
+          <h2>Cargar contenido</h2>
+          <p class="muted">
+            Incorporá canciones, artistas, álbumes, playlists y podcasts.
+          </p>
+          <div id="stats" class="stats"></div>
+          <button id="seed">Cargar catálogo de ejemplo</button>
+          <form id="import">
+            <label for="catalogFile">Archivo de contenido</label
             ><input
               id="catalogFile"
               type="file"
@@ -310,14 +354,16 @@
             /><small id="fileHelp"
               >Seleccioná un archivo JSON para incorporar su contenido al
               catálogo.</small
-            ><div><button type="submit">Subir archivo</button></div></form
-          ><div
+            >
+            <div><button type="submit">Subir archivo</button></div>
+          </form>
+          <div
             id="importStatus"
             class="status"
             role="status"
             aria-live="polite"
-          ></div
-        ></section>
+          ></div>
+        </section>
       </section>
       <div
         id="globalStatus"
@@ -409,6 +455,7 @@
           : 'Sin sesión iniciada';
         if (signed) {
           renderStats();
+          renderListening();
           findSongs(false);
         }
       }
@@ -477,11 +524,195 @@
           title.textContent = item.title;
           artist.className = 'muted';
           artist.textContent = item.artist;
+          info.className = 'song-info';
           info.append(title, artist);
-          li.append(cover, info);
+          li.append(cover, info, playButton(item));
           $('results').append(li);
         }
       }
+
+      const audio = $('audio');
+      let playbackVersion = 0,
+        queue = [],
+        currentContent = null,
+        loadingAudio = false;
+      function timeLabel(value) {
+        if (!Number.isFinite(value)) return '—';
+        return (
+          Math.floor(value / 60) +
+          ':' +
+          String(Math.floor(value % 60)).padStart(2, '0')
+        );
+      }
+      function updatePlayer() {
+        $('playPause').textContent = audio.paused ? 'Reproducir' : 'Pausar';
+        $('playPause').setAttribute(
+          'aria-label',
+          audio.paused ? 'Reproducir contenido' : 'Pausar contenido',
+        );
+        $('playbackTime').textContent =
+          timeLabel(audio.currentTime) +
+          ' / ' +
+          timeLabel(audio.duration || currentContent?.duration || 0);
+      }
+      function stopPlayback() {
+        playbackVersion++;
+        queue = [];
+        loadingAudio = false;
+        currentContent = null;
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+        $('player').hidden = true;
+        $('playPause').disabled = true;
+      }
+      function playButton(item) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Reproducir';
+        button.setAttribute('aria-label', 'Reproducir ' + item.title);
+        button.addEventListener('click', () => selectContent(item));
+        return button;
+      }
+      function renderListening() {
+        $('listening').replaceChildren();
+        const items = state.catalog.filter((x) =>
+          ['podcast', 'playlist'].includes(x.type),
+        );
+        for (const item of items) {
+          const li = document.createElement('li');
+          const info = document.createElement('div');
+          info.className = 'song-info';
+          const title = document.createElement('strong');
+          title.textContent = item.title;
+          const type = document.createElement('span');
+          type.textContent = item.type === 'playlist' ? 'Playlist' : 'Podcast';
+          type.className = 'muted';
+          info.append(title, type);
+          li.append(info, playButton(item));
+          $('listening').append(li);
+        }
+        if (!items.length)
+          $('listening').textContent = 'Todavía no hay podcasts ni playlists.';
+      }
+      async function selectContent(item) {
+        if (!requireSession()) return;
+        stopPlayback();
+        const version = playbackVersion;
+        $('player').hidden = false;
+        $('playerTitle').textContent = item.title;
+        $('playerDetails').textContent = '';
+        message('playerStatus', 'Cargando contenido…');
+        try {
+          const content = await api(
+            'content/' + item.type + '/' + encodeURIComponent(item.id),
+          );
+          if (version !== playbackVersion) return;
+          if (content.type === 'playlist') {
+            queue = content.items.filter((x) => x.available);
+            if (!queue.length)
+              throw Error(
+                'La playlist no tiene contenido disponible para reproducir.',
+              );
+            await playNext(version);
+          } else {
+            await playContent(content, version);
+          }
+        } catch (err) {
+          if (version === playbackVersion)
+            message('playerStatus', err.message, true);
+        }
+      }
+      async function playContent(content, version) {
+        if (version !== playbackVersion) return;
+        if (!content.available || !content.audioUrl)
+          throw Error('El contenido no puede ser reproducido.');
+        currentContent = content;
+        $('playerTitle').textContent = content.title;
+        $('playerDetails').textContent = [
+          content.artist,
+          content.album,
+          content.duration ? timeLabel(content.duration) : null,
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        $('playPause').disabled = true;
+        audio.src = content.audioUrl;
+        updatePlayer();
+        loadingAudio = true;
+        try {
+          await audio.play();
+          if (version !== playbackVersion) return;
+          $('playPause').disabled = false;
+          message('playerStatus', 'Reproduciendo.');
+        } catch (err) {
+          if (version !== playbackVersion) return;
+          if (err.name === 'NotAllowedError') {
+            $('playPause').disabled = false;
+            message(
+              'playerStatus',
+              'Presioná Reproducir para iniciar el audio.',
+            );
+            return;
+          }
+          throw Error('El contenido no puede ser reproducido.');
+        } finally {
+          if (version === playbackVersion) loadingAudio = false;
+        }
+      }
+      async function playNext(version) {
+        while (queue.length && version === playbackVersion) {
+          const ref = queue.shift();
+          try {
+            const content = await api(
+              'content/' + ref.type + '/' + encodeURIComponent(ref.id),
+            );
+            await playContent(content, version);
+            return;
+          } catch (err) {
+            if (version !== playbackVersion) return;
+          }
+        }
+        if (version === playbackVersion)
+          message(
+            'playerStatus',
+            'No hay más contenido disponible en la lista.',
+          );
+      }
+      $('playPause').addEventListener('click', async () => {
+        const version = playbackVersion;
+        if (!currentContent) return;
+        if (!audio.paused) {
+          audio.pause();
+          message('playerStatus', 'Reproducción pausada.');
+          return;
+        }
+        try {
+          await audio.play();
+          if (version === playbackVersion)
+            message('playerStatus', 'Reproduciendo.');
+        } catch {
+          if (version === playbackVersion)
+            message(
+              'playerStatus',
+              'El contenido no puede ser reproducido.',
+              true,
+            );
+        }
+      });
+      for (const event of ['play', 'pause', 'timeupdate', 'loadedmetadata'])
+        audio.addEventListener(event, updatePlayer);
+      audio.addEventListener('ended', () => {
+        if (queue.length) playNext(playbackVersion);
+        else message('playerStatus', 'Reproducción finalizada.');
+      });
+      audio.addEventListener('error', () => {
+        if (!currentContent || !audio.getAttribute('src')) return;
+        $('playPause').disabled = true;
+        message('playerStatus', 'El contenido no puede ser reproducido.', true);
+        if (queue.length && !loadingAudio) playNext(playbackVersion);
+      });
+
       $('register').addEventListener('submit', async (e) => {
         e.preventDefault();
         const button = e.submitter;
@@ -525,6 +756,7 @@
       $('logout').addEventListener('click', async () => {
         try {
           await api('logout', {});
+          stopPlayback();
           active = null;
           $('query').value = '';
           $('results').replaceChildren();
@@ -548,6 +780,7 @@
         const result = await api('catalog', { records });
         await refresh();
         renderStats();
+        renderListening();
         findSongs(false);
         message(
           'importStatus',
@@ -633,6 +866,6 @@
       refresh()
         .then(render)
         .catch((err) => message('globalStatus', err.message, true));
-    </script></body
-  ></html
->
+    </script>
+  </body>
+</html>

@@ -1,34 +1,50 @@
 [
   {
-    "id": "ej-artista-1",
-    "type": "artista",
-    "title": "Fito Páez"
+    "id": "prueba-c1",
+    "type": "cancion",
+    "title": "Pista de prueba 1",
+    "artist": "Equipo 03",
+    "album": "Audio de prueba",
+    "duration": 6,
+    "available": true,
+    "audioFile": "prueba-1.wav"
   },
   {
-    "id": "ej-album-1",
-    "type": "album",
-    "title": "El amor después del amor"
+    "id": "prueba-c2",
+    "type": "cancion",
+    "title": "Pista de prueba 2",
+    "artist": "Equipo 03",
+    "album": "Audio de prueba",
+    "duration": 6,
+    "available": true,
+    "audioFile": "prueba-2.wav"
   },
   {
-    "id": "ej-playlist-1",
-    "type": "playlist",
-    "title": "Clásicos del rock nacional"
-  },
-  {
-    "id": "ej-podcast-1",
+    "id": "prueba-p1",
     "type": "podcast",
-    "title": "Conversaciones sobre música"
+    "title": "Episodio de prueba",
+    "artist": "Equipo 03",
+    "duration": 6,
+    "available": true,
+    "audioFile": "prueba-1.wav"
   },
   {
-    "id": "ej-cancion-1",
-    "type": "cancion",
-    "title": "El amor después del amor",
-    "artist": "Fito Páez"
-  },
-  {
-    "id": "ej-cancion-2",
-    "type": "cancion",
-    "title": "A rodar mi vida",
-    "artist": "Fito Páez"
+    "id": "prueba-lista",
+    "type": "playlist",
+    "title": "Lista de reproducción de prueba",
+    "items": [
+      {
+        "id": "prueba-c1",
+        "type": "cancion"
+      },
+      {
+        "id": "prueba-c2",
+        "type": "cancion"
+      },
+      {
+        "id": "prueba-p1",
+        "type": "podcast"
+      }
+    ]
   }
 ]

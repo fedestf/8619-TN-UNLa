@@ -4,9 +4,11 @@
   "private": true,
   "description": "Lean Inception - Spotify - Equipo 03",
   "scripts": {
-    "start": "node server.cjs"
+    "start": "node server.cjs",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18"
   }
 }
+

@@ -51,3 +51,34 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 - Conservación de cuentas y contenido al cerrar la aplicación.
 - Creación automática de archivos JSON vacíos cuando no existen.
 - Datos de prueba de usuarios y catálogos incluidos en el repositorio para compartir entre integrantes del equipo.
+
+### US08 — Reproducción de contenido
+
+- Reproducción de canciones y episodios de podcast con sesión iniciada.
+- Información del contenido activo en el reproductor.
+- Continuidad automática con el siguiente contenido disponible de una playlist.
+- Mensajes para contenidos inexistentes o no disponibles.
+- Audios sintéticos de prueba incluidos en `datos/audio`, con canciones, un podcast y una playlist en el catálogo.
+
+### US09 — Pausa y reanudación
+
+- Pausa de la reproducción activa.
+- Reanudación desde el mismo punto, sin reiniciar el audio.
+- Indicación del tiempo transcurrido y de la duración.
+- Detención y limpieza del reproductor al cerrar sesión.
+
+### US36 — Obtener información del contenido
+
+- Consulta autenticada de canciones mediante `GET /api/songs/:id`.
+- Consulta de canciones, podcasts y playlists mediante `GET /api/content/:type/:id`.
+- Respuestas con título, artista, álbum, duración en segundos y disponibilidad; los campos no cargados se devuelven como `null`.
+- Información actualizada a partir del catálogo y de la existencia del archivo de audio.
+
+### US37 — Proporcionar acceso al audio
+
+- Transmisión autenticada mediante `GET /api/audio/:type/:id`.
+- Soporte para solicitudes parciales por rangos de bytes y consultas `HEAD`.
+- Archivos WAV, MP3, OGG y M4A dentro de `datos/audio`.
+- Importación de los campos `album`, `duration`, `available` y `audioFile` para canciones y podcasts.
+- Playlists con una lista ordenada `items`, cuyas referencias contienen `id` y `type` (`cancion` o `podcast`).
+- Validación de rutas para impedir el acceso a archivos fuera de la carpeta de audio.
