@@ -54,11 +54,11 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 
 ### US08 — Reproducción de contenido
 
-- Reproducción de canciones y episodios de podcast con sesión iniciada.
+- Reproducción de canciones con sesión iniciada.
 - Información del contenido activo en el reproductor.
-- Continuidad automática con el siguiente contenido disponible de una playlist.
 - Mensajes para contenidos inexistentes o no disponibles.
-- Audios sintéticos de prueba incluidos en `datos/audio`, con canciones, un podcast y una playlist en el catálogo.
+- Archivos de audio en `datos/audio`, asociados a canciones del catálogo mediante `audioFile`.
+- Interfaz de reproducción limitada a canciones; sin sección de podcasts ni playlists.
 
 ### US09 — Pausa y reanudación
 
@@ -82,3 +82,4 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 - Importación de los campos `album`, `duration`, `available` y `audioFile` para canciones y podcasts.
 - Playlists con una lista ordenada `items`, cuyas referencias contienen `id` y `type` (`cancion` o `podcast`).
 - Validación de rutas para impedir el acceso a archivos fuera de la carpeta de audio.
+
