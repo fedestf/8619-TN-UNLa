@@ -470,6 +470,49 @@
           padding: 10px;
         }
       }
+      .content-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+      .content-filters button {
+        margin: 0;
+        background: #2c3c32;
+        color: #e6f1e9;
+      }
+      .content-filters button[aria-pressed='true'] {
+        background: var(--green);
+        color: #092611;
+      }
+      .search-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .search-actions input {
+        flex: 1;
+        min-width: 160px;
+      }
+      .search-actions button {
+        margin: 0;
+      }
+      .collection-result {
+        display: block !important;
+      }
+      .collection-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        justify-content: space-between;
+      }
+      .collection-heading h3 {
+        margin: 0;
+      }
+      .collection-heading button {
+        margin: 0;
+      }
     </style>
   </head>
   <body>
@@ -611,19 +654,44 @@
         </section>
         <div class="card">
           <h2>Explorá el catálogo</h2>
-          <form id="search">
-            <label for="searchType">Buscar por</label>
-            <select id="searchType">
-              <option value="song">Canción</option>
-              <option value="artist">Artista</option>
-            </select>
-            <label id="queryLabel" for="query">Nombre de la canción</label
-            ><input
-              id="query"
-              type="search"
-              placeholder="Por ejemplo: De música ligera"
-              maxlength="150"
-            /><button id="searchButton">Buscar canciones</button>
+          <div
+            id="contentFilters"
+            class="content-filters"
+            role="group"
+            aria-label="Filtrar contenido"
+          >
+            <button type="button" data-filter="all" aria-pressed="true">
+              Todo
+            </button>
+            <button type="button" data-filter="song" aria-pressed="false">
+              Canciones
+            </button>
+            <button type="button" data-filter="artist" aria-pressed="false">
+              Artistas
+            </button>
+            <button type="button" data-filter="album" aria-pressed="false">
+              Álbumes
+            </button>
+            <button type="button" data-filter="playlist" aria-pressed="false">
+              Playlists
+            </button>
+          </div>
+          <form id="search" class="content-search">
+            <label id="queryLabel" for="query"
+              >Buscar en el contenido disponible</label
+            >
+            <div class="search-actions">
+              <input
+                id="query"
+                type="search"
+                placeholder="Canción, artista, álbum o playlist"
+                maxlength="150"
+              />
+              <button id="searchButton" type="submit">Buscar</button
+              ><button id="clearSearch" type="button" class="secondary">
+                Limpiar filtros
+              </button>
+            </div>
           </form>
           <div
             id="searchStatus"
@@ -820,7 +888,8 @@
       };
       let state = { users: [], catalog: [] },
         active = null;
-      let searchVersion = 0;
+      let searchVersion = 0,
+        contentFilter = 'all';
       function message(id, text, error = false) {
         $(id).textContent = text;
         $(id).className = 'status ' + (error ? 'error' : 'success');
@@ -946,86 +1015,124 @@
         );
         return li;
       }
-      async function findSongs(submitted = true) {
+      function updateFilters() {
+        for (const button of document.querySelectorAll('[data-filter]'))
+          button.setAttribute(
+            'aria-pressed',
+            String(button.dataset.filter === contentFilter),
+          );
+        const labels = {
+          all: 'Buscar en el contenido disponible',
+          song: 'Nombre de la canción',
+          artist: 'Nombre del artista',
+          album: 'Nombre del álbum',
+          playlist: 'Nombre de la playlist',
+        };
+        $('queryLabel').textContent = labels[contentFilter];
+        $('query').placeholder =
+          contentFilter === 'all'
+            ? 'Canción, artista, álbum o playlist'
+            : labels[contentFilter];
+      }
+      async function findSongs() {
         const version = ++searchVersion;
         if (!requireSession()) return;
-        const artistSearch = $('searchType').value === 'artist';
-        const raw = $('query').value.trim();
-        const term = normalize(raw);
+        const query = $('query').value.trim(),
+          filter = contentFilter;
         $('results').replaceChildren();
-        if (!term) {
+        message('searchStatus', 'Cargando contenido…');
+        try {
+          const result = await api(
+            'content/available?type=' +
+              filter +
+              '&q=' +
+              encodeURIComponent(query),
+          );
+          if (version !== searchVersion || !active) return;
+          for (const item of result.songs)
+            $('results').append(songRow(item, null, result.songs));
+          for (const group of [...result.artists, ...result.albums]) {
+            const li = document.createElement('li');
+            li.className = 'collection-result';
+            const heading = document.createElement('h3');
+            heading.textContent = group.name;
+            li.append(heading);
+            if (filter === 'album') {
+              const artist = document.createElement('p');
+              artist.className = 'muted';
+              artist.textContent = group.artist;
+              li.append(artist);
+            }
+            const songs = document.createElement('ul');
+            songs.className = 'songs';
+            songs.setAttribute('aria-label', 'Canciones de ' + group.name);
+            for (const song of group.songs)
+              songs.append(songRow(song, null, group.songs));
+            li.append(songs);
+            $('results').append(li);
+          }
+          for (const playlist of result.playlists) {
+            const li = document.createElement('li');
+            li.className = 'collection-result';
+            const heading = document.createElement('div');
+            heading.className = 'collection-heading';
+            const title = document.createElement('h3');
+            title.textContent = playlist.title;
+            const open = document.createElement('button');
+            open.type = 'button';
+            open.textContent = 'Ver playlist';
+            open.setAttribute('aria-label', 'Ver playlist ' + playlist.title);
+            open.addEventListener('click', () => openPlaylist(playlist.id));
+            heading.append(title, open);
+            const detail = document.createElement('p');
+            detail.className = 'muted';
+            detail.textContent =
+              playlist.songCount +
+              (playlist.songCount === 1 ? ' canción' : ' canciones');
+            li.append(heading, detail);
+            $('results').append(li);
+          }
+          const count =
+            result.songs.length +
+            result.artists.length +
+            result.albums.length +
+            result.playlists.length;
+          const nouns = {
+            all: 'contenidos',
+            song: 'canciones',
+            artist: 'artistas',
+            album: 'álbumes',
+            playlist: 'playlists',
+          };
           message(
             'searchStatus',
-            artistSearch
-              ? 'Ingresá el nombre de un artista para buscar.'
-              : submitted
-                ? 'Ingresá el nombre de una canción para buscar.'
-                : 'Buscá una canción por su nombre.',
-            submitted,
+            count
+              ? count +
+                  ' ' +
+                  (count === 1
+                    ? {
+                        all: 'contenido',
+                        song: 'canción',
+                        artist: 'artista',
+                        album: 'álbum',
+                        playlist: 'playlist',
+                      }[filter]
+                    : nouns[filter]) +
+                  (count === 1 ? ' disponible.' : ' disponibles.')
+              : query
+                ? 'No se encontraron ' +
+                  nouns[filter] +
+                  ' relacionados con “' +
+                  query +
+                  '”.'
+                : filter === 'all'
+                  ? 'No hay contenido disponible para mostrar.'
+                  : 'No hay ' + nouns[filter] + ' disponibles para mostrar.',
           );
-          return;
+        } catch (err) {
+          if (version === searchVersion)
+            message('searchStatus', err.message, true);
         }
-        if (artistSearch) {
-          message('searchStatus', 'Buscando artistas…');
-          try {
-            const result = await api(
-              'search/artists?q=' + encodeURIComponent(raw),
-            );
-            if (version !== searchVersion || !active) return;
-            message(
-              'searchStatus',
-              result.artists.length
-                ? result.artists.length +
-                    (result.artists.length === 1
-                      ? ' artista encontrado.'
-                      : ' artistas encontrados.')
-                : 'No se encontraron artistas relacionados con “' + raw + '”.',
-            );
-            for (const artist of result.artists) {
-              const li = document.createElement('li');
-              li.className = 'artist-result';
-              const title = document.createElement('strong');
-              title.textContent = artist.name;
-              const songs = document.createElement('ul');
-              songs.className = 'songs';
-              songs.setAttribute('aria-label', 'Canciones de ' + artist.name);
-              for (const item of result.songs.filter(
-                (item) => normalize(item.artist) === normalize(artist.name),
-              ))
-                songs.append(
-                  songRow(
-                    item,
-                    null,
-                    result.songs.filter(
-                      (song) =>
-                        normalize(song.artist) === normalize(artist.name),
-                    ),
-                  ),
-                );
-              li.append(title, songs);
-              $('results').append(li);
-            }
-          } catch (err) {
-            if (version === searchVersion)
-              message('searchStatus', err.message, true);
-          }
-          return;
-        }
-        const found = state.catalog.filter(
-          (item) =>
-            item.type === 'cancion' && normalize(item.title).includes(term),
-        );
-        message(
-          'searchStatus',
-          found.length
-            ? found.length +
-                (found.length === 1
-                  ? ' canción encontrada.'
-                  : ' canciones encontradas.')
-            : 'No se encontraron canciones relacionadas con “' + raw + '”.',
-        );
-        for (const item of found)
-          $('results').append(songRow(item, null, found));
       }
 
       let selectedPlaylistId = null,
@@ -1104,6 +1211,7 @@
       async function reloadLibrary() {
         await refresh();
         renderLibrary();
+        await findSongs();
       }
       function showPlaylistForm(playlist = null) {
         editingPlaylistId = playlist?.id || null;
@@ -1545,6 +1653,8 @@
           active = null;
           searchVersion++;
           $('query').value = '';
+          contentFilter = 'all';
+          updateFilters();
           $('results').replaceChildren();
           render();
           message('globalStatus', 'Sesión cerrada.');
@@ -1552,19 +1662,20 @@
           message('globalStatus', err.message, true);
         }
       });
-      $('searchType').addEventListener('change', () => {
-        const artist = $('searchType').value === 'artist';
-        $('queryLabel').textContent = artist
-          ? 'Nombre del artista'
-          : 'Nombre de la canción';
-        $('query').placeholder = artist
-          ? 'Por ejemplo: Soda Stereo'
-          : 'Por ejemplo: De música ligera';
-        $('searchButton').textContent = artist
-          ? 'Buscar artistas'
-          : 'Buscar canciones';
+      for (const button of document.querySelectorAll('[data-filter]'))
+        button.addEventListener('click', () => {
+          contentFilter = button.dataset.filter;
+          updateFilters();
+          findSongs();
+        });
+      $('clearSearch').addEventListener('click', () => {
+        contentFilter = 'all';
         $('query').value = '';
-        findSongs(false);
+        updateFilters();
+        findSongs();
+      });
+      $('query').addEventListener('search', () => {
+        if (!$('query').value) findSongs();
       });
       $('search').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1596,6 +1707,7 @@
           type: 'cancion',
           title: 'De música ligera',
           artist: 'Soda Stereo',
+          album: 'Canción animal',
           audioFile: 'de-musica-ligera.mp3',
           available: true,
           duration: 213.15,
@@ -1605,6 +1717,7 @@
           type: 'cancion',
           title: 'Persiana americana',
           artist: 'Soda Stereo',
+          album: 'Signos',
           audioFile: 'persiana-americana.mp3',
           available: true,
           duration: 293.89,
@@ -1614,6 +1727,7 @@
           type: 'cancion',
           title: 'Puente',
           artist: 'Gustavo Cerati',
+          album: 'Bocanada',
           audioFile: 'puente.mp3',
           available: true,
           duration: 242.14,

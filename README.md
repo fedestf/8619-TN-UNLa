@@ -24,7 +24,7 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 - Búsqueda por coincidencias parciales en el nombre de la canción.
 - Búsqueda sin distinguir mayúsculas ni tildes.
 - Resultados con título y artista.
-- Mensajes para búsquedas vacías, sin resultados o sin canciones disponibles.
+- Listado inicial sin exigir una búsqueda y mensajes para filtros sin resultados o sin canciones disponibles.
 - Lectura del catálogo actualizado en cada búsqueda.
 
 ### US34 — Cerrar sesión
@@ -156,3 +156,25 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 - Información del tema, anterior/siguiente, pausa/reanudación, tiempo y volumen accesibles durante la navegación.
 - Espacio reservado debajo del contenido y del panel lateral para evitar superposiciones.
 - Distribución adaptable al ancho de la pantalla.
+
+### US38 — Mostrar contenido disponible
+
+- Listado inicial de canciones reproducibles al iniciar sesión, sin tener que buscar primero.
+- Filtros superiores Todo, Canciones, Artistas, Álbumes y Playlists.
+- Búsqueda sobre el filtro activo y opción Limpiar filtros para volver al listado completo.
+- Consulta autenticada mediante `GET /api/content/available?type=all&q=texto`.
+- Exclusión de canciones sin archivo de audio o marcadas como no disponibles.
+- Listado general con playlists propias que contienen canciones disponibles; el filtro Playlists también permite encontrar listas vacías.
+- Mensajes cuando no hay contenido disponible o no existen coincidencias.
+
+### US05 — Búsqueda por álbum
+
+- Búsqueda por nombre de álbum con coincidencias parciales, sin distinguir mayúsculas ni tildes.
+- Álbumes agrupados por nombre y artista, mostrando sus canciones disponibles.
+- Campo álbum incorporado a las tres canciones actuales del catálogo.
+
+### US06 — Búsqueda por playlist
+
+- Búsqueda parcial por nombre de las playlists de la cuenta activa.
+- Resultados con nombre, cantidad de canciones y acceso al detalle.
+- Actualización del listado al crear, editar o eliminar playlists.

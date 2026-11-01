@@ -6,7 +6,8 @@
     "artist": "Soda Stereo",
     "audioFile": "de-musica-ligera.mp3",
     "available": true,
-    "duration": 213.15
+    "duration": 213.15,
+    "album": "Canción animal"
   },
   {
     "id": "c2",
@@ -15,7 +16,8 @@
     "artist": "Soda Stereo",
     "audioFile": "persiana-americana.mp3",
     "available": true,
-    "duration": 293.89
+    "duration": 293.89,
+    "album": "Signos"
   },
   {
     "id": "c3",
@@ -24,6 +26,7 @@
     "artist": "Gustavo Cerati",
     "audioFile": "puente.mp3",
     "available": true,
-    "duration": 242.14
+    "duration": 242.14,
+    "album": "Bocanada"
   }
 ]

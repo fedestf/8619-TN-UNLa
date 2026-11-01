@@ -301,6 +301,65 @@ function createServer({ rootDir = __dirname } = {}) {
       }
 
       const requestUrl = new URL(req.url, 'http://localhost');
+      if (requestUrl.pathname === '/api/content/available') {
+        if (!user)
+          fail(401, 'Iniciá sesión para consultar el contenido disponible.');
+        if (req.method !== 'GET') fail(405, 'Método no permitido.');
+        const type = requestUrl.searchParams.get('type') || 'all';
+        const query = (requestUrl.searchParams.get('q') || '').trim();
+        if (
+          !['all', 'song', 'artist', 'album', 'playlist'].includes(type) ||
+          query.length > 150 ||
+          requestUrl.searchParams.getAll('q').length > 1 ||
+          requestUrl.searchParams.getAll('type').length > 1
+        )
+          fail(400, 'Los filtros de contenido no son válidos.');
+        const normalize = (value) =>
+          String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+        const term = normalize(query);
+        const matches = (value) => normalize(value).includes(term);
+        const catalog = read('catalogos');
+        const available = catalog
+          .filter((item) => item.type === 'cancion' && audioPath(item))
+          .map((item) => describe(item, catalog));
+        const result = { songs: [], artists: [], albums: [], playlists: [] };
+        if (type === 'all' || type === 'song')
+          result.songs = available.filter((song) =>
+            type === 'song'
+              ? matches(song.title)
+              : matches([song.title, song.artist, song.album].join(' ')),
+          );
+        if (type === 'artist' || type === 'album') {
+          const groups = new Map();
+          for (const song of available) {
+            const name = type === 'artist' ? song.artist : song.album;
+            if (!name || !matches(name)) continue;
+            const key =
+              normalize(name) +
+              (type === 'album' ? ':' + normalize(song.artist) : '');
+            if (!groups.has(key))
+              groups.set(key, { name, artist: song.artist, songs: [] });
+            groups.get(key).songs.push(song);
+          }
+          result[type === 'artist' ? 'artists' : 'albums'] = [
+            ...groups.values(),
+          ];
+        }
+        if (type === 'all' || type === 'playlist')
+          result.playlists = read('playlists')
+            .filter((p) => p.ownerEmail === user.email && matches(p.title))
+            .map(playlistInfo)
+            .filter(
+              (p) =>
+                type === 'playlist' || p.items.some((item) => item.available),
+            );
+        return res.end(JSON.stringify(result));
+      }
+
       if (requestUrl.pathname === '/api/search/artists') {
         if (!user) fail(401, 'Iniciá sesión para buscar artistas.');
         if (req.method !== 'GET') fail(405, 'Método no permitido.');
