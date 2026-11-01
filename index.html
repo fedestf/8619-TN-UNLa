@@ -889,7 +889,8 @@
       let state = { users: [], catalog: [] },
         active = null;
       let searchVersion = 0,
-        contentFilter = 'all';
+        contentFilter = 'all',
+        searchTimer = null;
       function message(id, text, error = false) {
         $(id).textContent = text;
         $(id).className = 'status ' + (error ? 'error' : 'success');
@@ -1034,7 +1035,21 @@
             ? 'Canción, artista, álbum o playlist'
             : labels[contentFilter];
       }
+      function scheduleSearch() {
+        searchVersion++;
+        clearTimeout(searchTimer);
+        if (!$('query').value.trim()) {
+          findSongs();
+          return;
+        }
+        searchTimer = setTimeout(() => {
+          searchTimer = null;
+          findSongs();
+        }, 180);
+      }
       async function findSongs() {
+        clearTimeout(searchTimer);
+        searchTimer = null;
         const version = ++searchVersion;
         if (!requireSession()) return;
         const query = $('query').value.trim(),
@@ -1651,6 +1666,8 @@
           resetLibrary();
           state.playlists = [];
           active = null;
+          clearTimeout(searchTimer);
+          searchTimer = null;
           searchVersion++;
           $('query').value = '';
           contentFilter = 'all';
@@ -1674,9 +1691,10 @@
         updateFilters();
         findSongs();
       });
-      $('query').addEventListener('search', () => {
-        if (!$('query').value) findSongs();
+      $('query').addEventListener('input', (event) => {
+        if (!event.isComposing) scheduleSearch();
       });
+      $('query').addEventListener('compositionend', scheduleSearch);
       $('search').addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
