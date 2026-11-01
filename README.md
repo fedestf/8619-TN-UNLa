@@ -173,7 +173,7 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 
 - Búsqueda por nombre de álbum con coincidencias parciales, sin distinguir mayúsculas ni tildes.
 - Álbumes agrupados por nombre y artista, mostrando sus canciones disponibles.
-- Campo álbum incorporado a las tres canciones actuales del catálogo.
+- Campo álbum incorporado a las canciones del catálogo.
 
 ### US06 — Búsqueda por playlist
 

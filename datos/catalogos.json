@@ -28,5 +28,45 @@
     "available": true,
     "duration": 242.14,
     "album": "Bocanada"
+  },
+  {
+    "id": "c4",
+    "type": "cancion",
+    "title": "Mariposa Pontiac - Rock del país",
+    "artist": "Patricio Rey y sus Redonditos de Ricota",
+    "album": "Luzbelito",
+    "duration": 289.63,
+    "audioFile": "mariposa-pontiac.mp3",
+    "available": true
+  },
+  {
+    "id": "c5",
+    "type": "cancion",
+    "title": "Bohemian Rhapsody",
+    "artist": "Queen",
+    "album": "A Night at the Opera",
+    "duration": 359.47,
+    "audioFile": "bohemian-rhapsody.mp3",
+    "available": true
+  },
+  {
+    "id": "c6",
+    "type": "cancion",
+    "title": "Perfecta",
+    "artist": "Miranda!",
+    "album": "El Templo del Pop",
+    "duration": 225.46,
+    "audioFile": "perfecta.mp3",
+    "available": true
+  },
+  {
+    "id": "c7",
+    "type": "cancion",
+    "title": "Jijiji",
+    "artist": "Patricio Rey y sus Redonditos de Ricota",
+    "album": "Oktubre",
+    "duration": 334.61,
+    "audioFile": "jijiji.mp3",
+    "available": true
   }
 ]
