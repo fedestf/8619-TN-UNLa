@@ -270,6 +270,11 @@ function createServer({ rootDir = __dirname } = {}) {
         return res.end(fs.readFileSync(path.join(root, 'index.html')));
       }
 
+      if (req.url === '/playback-queue.js' && req.method === 'GET') {
+        res.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+        return res.end(fs.readFileSync(path.join(root, 'playback-queue.js')));
+      }
+
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
       if (!req.url.startsWith('/api/')) {

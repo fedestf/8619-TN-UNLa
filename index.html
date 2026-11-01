@@ -378,6 +378,98 @@
           flex-wrap: wrap;
         }
       }
+      #player {
+        position: fixed;
+        left: 100px;
+        right: 20px;
+        bottom: 16px;
+        z-index: 5;
+        margin: 0;
+        padding: 18px 24px 10px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(160px, 260px);
+        gap: 6px 24px;
+        align-items: center;
+        background: #18231df5;
+        box-shadow: 0 10px 50px #0009;
+        border-color: #45634e;
+      }
+      .player-track {
+        min-width: 0;
+      }
+      #playerTitle {
+        margin: 0 0 4px;
+        font-size: 18px;
+        overflow-wrap: anywhere;
+      }
+      #playerDetails {
+        margin: 0;
+        font-size: 13px;
+      }
+      .playback-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .playback-controls button {
+        margin: 0;
+        min-height: 44px;
+      }
+      #player .volume-control label {
+        margin: 0 0 6px;
+      }
+      #playbackTime {
+        grid-column: 2;
+        margin: 0;
+        text-align: center;
+        font-size: 12px;
+      }
+      #playerStatus {
+        grid-column: 1 / -1;
+        min-height: 18px;
+        margin: 0;
+        font-size: 12px;
+      }
+      body.has-player main {
+        padding-bottom: calc(var(--player-height, 180px) + 32px);
+      }
+      body.has-player .library {
+        bottom: calc(var(--player-height, 180px) + 32px);
+      }
+      @media (max-width: 900px) {
+        #player {
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 10px;
+        }
+        #player .volume-control {
+          grid-column: 1;
+        }
+        #playbackTime {
+          grid-column: 2;
+        }
+      }
+      @media (max-width: 560px) {
+        #player {
+          left: 80px;
+          right: 8px;
+          bottom: 8px;
+          padding: 14px;
+          grid-template-columns: 1fr;
+          max-height: 55vh;
+          overflow-y: auto;
+        }
+        #player .volume-control,
+        #playbackTime {
+          grid-column: 1;
+        }
+        .playback-controls {
+          gap: 6px;
+        }
+        .playback-controls button {
+          padding: 10px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -547,11 +639,39 @@
           aria-labelledby="playerHeading"
           hidden
         >
-          <h2 id="playerHeading">Reproductor</h2>
-          <h3 id="playerTitle"></h3>
-          <p id="playerDetails" class="muted"></p>
+          <h2 id="playerHeading" class="sr-only">Reproductor</h2>
+          <div class="player-track">
+            <h3 id="playerTitle"></h3>
+            <p id="playerDetails" class="muted"></p>
+          </div>
           <audio id="audio" preload="metadata"></audio>
-          <button id="playPause" type="button" disabled>Reproducir</button>
+          <div
+            class="playback-controls"
+            role="group"
+            aria-label="Controles de reproducción"
+          >
+            <button
+              id="previousTrack"
+              type="button"
+              class="secondary"
+              aria-label="Canción anterior"
+              title="Canción anterior"
+              disabled
+            >
+              ⏮
+            </button>
+            <button id="playPause" type="button" disabled>Reproducir</button>
+            <button
+              id="nextTrack"
+              type="button"
+              class="secondary"
+              aria-label="Canción siguiente"
+              title="Canción siguiente"
+              disabled
+            >
+              ⏭
+            </button>
+          </div>
           <div
             class="volume-control"
             role="group"
@@ -686,6 +806,7 @@
         </button>
       </div>
     </dialog>
+    <script src="/playback-queue.js"></script>
     <script>
       'use strict';
       const $ = (id) => document.getElementById(id);
@@ -803,7 +924,7 @@
           $('stats').append(node);
         }
       }
-      function songRow(item, playlistId = null) {
+      function songRow(item, playlistId = null, context = [item]) {
         const li = document.createElement('li');
         const cover = document.createElement('div');
         cover.className = 'cover';
@@ -820,7 +941,7 @@
         li.append(
           cover,
           info,
-          playButton(item),
+          playButton(item, context),
           playlistId ? removeSongButton(item, playlistId) : addSongButton(item),
         );
         return li;
@@ -871,7 +992,16 @@
               for (const item of result.songs.filter(
                 (item) => normalize(item.artist) === normalize(artist.name),
               ))
-                songs.append(songRow(item));
+                songs.append(
+                  songRow(
+                    item,
+                    null,
+                    result.songs.filter(
+                      (song) =>
+                        normalize(song.artist) === normalize(artist.name),
+                    ),
+                  ),
+                );
               li.append(title, songs);
               $('results').append(li);
             }
@@ -894,7 +1024,8 @@
                   : ' canciones encontradas.')
             : 'No se encontraron canciones relacionadas con “' + raw + '”.',
         );
-        for (const item of found) $('results').append(songRow(item));
+        for (const item of found)
+          $('results').append(songRow(item, null, found));
       }
 
       let selectedPlaylistId = null,
@@ -952,7 +1083,7 @@
         $('playlistSongs').replaceChildren();
         $('playlistEmpty').hidden = playlist.items.length > 0;
         for (const item of playlist.items)
-          $('playlistSongs').append(songRow(item, playlist.id));
+          $('playlistSongs').append(songRow(item, playlist.id, playlist.items));
       }
       async function openPlaylist(id) {
         const epoch = ++libraryEpoch;
@@ -1182,9 +1313,17 @@
       audio.addEventListener('volumechange', updateVolume);
       updateVolume();
       let playbackVersion = 0,
-        queue = [],
+        queue = new PlaybackQueue(),
         currentContent = null,
         loadingAudio = false;
+      const playerObserver = new ResizeObserver(() => {
+        if (!$('player').hidden)
+          document.documentElement.style.setProperty(
+            '--player-height',
+            $('player').getBoundingClientRect().height + 'px',
+          );
+      });
+      playerObserver.observe($('player'));
       function timeLabel(value) {
         if (!Number.isFinite(value)) return '—';
         return (
@@ -1199,117 +1338,128 @@
           'aria-label',
           audio.paused ? 'Reproducir contenido' : 'Pausar contenido',
         );
+        $('playPause').disabled = loadingAudio || !currentContent;
+        $('previousTrack').disabled = loadingAudio || !queue.has(-1);
+        $('nextTrack').disabled = loadingAudio || !queue.has(1);
         $('playbackTime').textContent =
           timeLabel(audio.currentTime) +
           ' / ' +
           timeLabel(audio.duration || currentContent?.duration || 0);
       }
-      function stopPlayback() {
-        playbackVersion++;
-        queue = [];
-        loadingAudio = false;
+      function clearAudio() {
         currentContent = null;
         audio.pause();
         audio.removeAttribute('src');
         audio.load();
-        $('player').hidden = true;
-        $('playPause').disabled = true;
       }
-      function playButton(item) {
+      function stopPlayback() {
+        playbackVersion++;
+        queue = new PlaybackQueue();
+        loadingAudio = false;
+        clearAudio();
+        $('player').hidden = true;
+        document.body.classList.remove('has-player');
+        updatePlayer();
+      }
+      function playButton(item, context = [item]) {
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = 'Reproducir';
         button.setAttribute('aria-label', 'Reproducir ' + item.title);
-        button.addEventListener('click', () => selectContent(item));
+        button.addEventListener('click', () => selectContent(item, context));
         return button;
       }
-      async function selectContent(item) {
+      async function selectContent(item, context = [item]) {
         if (!requireSession() || item.type !== 'cancion') return;
-        stopPlayback();
-        const version = playbackVersion;
+        queue = new PlaybackQueue(context, item.id);
+        if (queue.index === -1) queue = new PlaybackQueue([item], item.id);
+        await startAt(queue.index);
+      }
+      async function startAt(index, direction = 1, skipUnavailable = false) {
+        const version = ++playbackVersion;
+        loadingAudio = true;
+        clearAudio();
         $('player').hidden = false;
-        $('playerTitle').textContent = item.title;
+        document.body.classList.add('has-player');
+        $('playerTitle').textContent = 'Cargando canción…';
         $('playerDetails').textContent = '';
         message('playerStatus', 'Cargando contenido…');
-        try {
-          const content = await api(
-            'content/' + item.type + '/' + encodeURIComponent(item.id),
-          );
-          if (version !== playbackVersion) return;
-          if (content.type === 'playlist') {
-            queue = content.items.filter((x) => x.available);
-            if (!queue.length)
-              throw Error(
-                'La playlist no tiene contenido disponible para reproducir.',
-              );
-            await playNext(version);
-          } else {
-            await playContent(content, version);
-          }
-        } catch (err) {
-          if (version === playbackVersion)
-            message('playerStatus', err.message, true);
-        }
-      }
-      async function playContent(content, version) {
-        if (version !== playbackVersion) return;
-        if (!content.available || !content.audioUrl)
-          throw Error('El contenido no puede ser reproducido.');
-        currentContent = content;
-        $('playerTitle').textContent = content.title;
-        $('playerDetails').textContent = [
-          content.artist,
-          content.album,
-          content.duration ? timeLabel(content.duration) : null,
-        ]
-          .filter(Boolean)
-          .join(' · ');
-        $('playPause').disabled = true;
-        audio.src = content.audioUrl;
         updatePlayer();
-        loadingAudio = true;
         try {
-          await audio.play();
-          if (version !== playbackVersion) return;
-          $('playPause').disabled = false;
-          message('playerStatus', 'Reproduciendo.');
-        } catch (err) {
-          if (version !== playbackVersion) return;
-          if (err.name === 'NotAllowedError') {
-            $('playPause').disabled = false;
-            message(
-              'playerStatus',
-              'Presioná Reproducir para iniciar el audio.',
-            );
-            return;
-          }
-          throw Error('El contenido no puede ser reproducido.');
-        } finally {
-          if (version === playbackVersion) loadingAudio = false;
-        }
-      }
-      async function playNext(version) {
-        while (queue.length && version === playbackVersion) {
-          const ref = queue.shift();
-          try {
-            const content = await api(
-              'content/' + ref.type + '/' + encodeURIComponent(ref.id),
-            );
-            await playContent(content, version);
-            return;
-          } catch (err) {
+          for (
+            let i = index;
+            i >= 0 && i < queue.items.length;
+            i += direction
+          ) {
             if (version !== playbackVersion) return;
+            if (skipUnavailable && queue.items[i].available === false) continue;
+            queue.index = i;
+            try {
+              const content = await api(
+                'content/cancion/' + encodeURIComponent(queue.items[i].id),
+              );
+              if (version !== playbackVersion) return;
+              if (!content.available || !content.audioUrl)
+                throw Error('El contenido no puede ser reproducido.');
+              currentContent = content;
+              $('playerTitle').textContent = content.title;
+              $('playerDetails').textContent = [
+                content.artist,
+                content.album,
+                content.duration ? timeLabel(content.duration) : null,
+              ]
+                .filter(Boolean)
+                .join(' · ');
+              audio.src = content.audioUrl;
+              try {
+                await audio.play();
+              } catch (err) {
+                if (version !== playbackVersion) return;
+                if (err.name === 'NotAllowedError') {
+                  message(
+                    'playerStatus',
+                    'Presioná Reproducir para iniciar el audio.',
+                  );
+                  return;
+                }
+                throw Error('El contenido no puede ser reproducido.');
+              }
+              if (version === playbackVersion)
+                message('playerStatus', 'Reproduciendo.');
+              return;
+            } catch (err) {
+              if (version !== playbackVersion) return;
+              clearAudio();
+              if (!skipUnavailable) throw err;
+            }
           }
-        }
-        if (version === playbackVersion)
+          $('playerTitle').textContent = 'Contenido no disponible';
           message(
             'playerStatus',
-            'No hay más contenido disponible en la lista.',
+            'No hay más canciones disponibles en esta dirección.',
           );
+        } catch (err) {
+          if (version === playbackVersion) {
+            $('playerTitle').textContent = 'Contenido no disponible';
+            message('playerStatus', err.message, true);
+          }
+        } finally {
+          if (version === playbackVersion) {
+            loadingAudio = false;
+            updatePlayer();
+          }
+        }
       }
+      async function navigateTrack(direction) {
+        if (loadingAudio) return;
+        const candidates = queue.candidates(direction);
+        if (candidates.length) await startAt(candidates[0], direction, true);
+      }
+      $('previousTrack').addEventListener('click', () => navigateTrack(-1));
+      $('nextTrack').addEventListener('click', () => navigateTrack(1));
       $('playPause').addEventListener('click', async () => {
         const version = playbackVersion;
-        if (!currentContent) return;
+        if (!currentContent || loadingAudio) return;
         if (!audio.paused) {
           audio.pause();
           message('playerStatus', 'Reproducción pausada.');
@@ -1331,14 +1481,19 @@
       for (const event of ['play', 'pause', 'timeupdate', 'loadedmetadata'])
         audio.addEventListener(event, updatePlayer);
       audio.addEventListener('ended', () => {
-        if (queue.length) playNext(playbackVersion);
-        else message('playerStatus', 'Reproducción finalizada.');
+        if (queue.has(1)) navigateTrack(1);
+        else {
+          updatePlayer();
+          message('playerStatus', 'Reproducción finalizada.');
+        }
       });
       audio.addEventListener('error', () => {
-        if (!currentContent || !audio.getAttribute('src')) return;
-        $('playPause').disabled = true;
+        if (!currentContent || !audio.getAttribute('src') || loadingAudio)
+          return;
+        currentContent = null;
+        updatePlayer();
         message('playerStatus', 'El contenido no puede ser reproducido.', true);
-        if (queue.length && !loadingAudio) playNext(playbackVersion);
+        if (queue.has(1)) navigateTrack(1);
       });
 
       $('register').addEventListener('submit', async (e) => {

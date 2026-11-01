@@ -140,3 +140,19 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 - Opción Quitar en cada canción de la playlist.
 - Actualización de la lista y su contador al eliminar una canción.
 - Conservación de la canción en el catálogo y en las demás playlists.
+
+### US10 — Avanzar y retroceder
+
+- Botones Canción anterior y Canción siguiente en el reproductor.
+- Navegación según el orden de la playlist o de los resultados desde los que se inició la reproducción.
+- Conservación de la lista de reproducción aunque se consulte otra playlist o se cambie la búsqueda.
+- Controles deshabilitados al llegar al principio o al final de la lista.
+- Omisión de canciones no disponibles al navegar y continuidad automática al finalizar una canción.
+- Conservación del volumen al cambiar de tema.
+
+### Reproductor flotante
+
+- Reproductor fijo en la parte inferior, visible mientras se desplaza la página.
+- Información del tema, anterior/siguiente, pausa/reanudación, tiempo y volumen accesibles durante la navegación.
+- Espacio reservado debajo del contenido y del panel lateral para evitar superposiciones.
+- Distribución adaptable al ancho de la pantalla.
