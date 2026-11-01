@@ -105,3 +105,38 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 - Cambio del volumen del audio activo sin detenerlo ni reiniciar su posición.
 - Conservación del nivel al pausar, reanudar o cambiar de canción durante la sesión de la página.
 
+### US12 — Crear playlists
+
+- Panel lateral con botón + para crear playlists y accesos a las listas de la cuenta activa.
+- Creación con nombre obligatorio y descripción opcional.
+- Validación de nombres vacíos o demasiado largos.
+- Persistencia de las bibliotecas personales en `datos/playlists.json`.
+
+### US13 — Consultar playlists
+
+- Apertura de las listas desde el panel lateral.
+- Consulta del nombre, descripción, cantidad de canciones y contenido actualizado.
+- Reproducción de canciones desde el detalle de la playlist.
+- Aislamiento de las playlists por cuenta de usuario.
+
+### US14 — Editar playlists
+
+- Edición del nombre y la descripción desde el detalle.
+- Validación del nombre y actualización inmediata de la biblioteca.
+
+### US15 — Eliminar playlist
+
+- Eliminación con confirmación explícita.
+- Actualización del panel lateral sin eliminar canciones del catálogo ni archivos de audio.
+
+### US16 — Agregar canciones a una playlist
+
+- Selección de una playlist propia desde los resultados de búsqueda.
+- Incorporación persistente de canciones y actualización de su contenido.
+- Validación de canciones existentes y rechazo de duplicados.
+
+### US17 — Eliminar canciones de una playlist
+
+- Opción Quitar en cada canción de la playlist.
+- Actualización de la lista y su contador al eliminar una canción.
+- Conservación de la canción en el catálogo y en las demás playlists.

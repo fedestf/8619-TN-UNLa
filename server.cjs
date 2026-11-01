@@ -12,7 +12,7 @@ function createServer({ rootDir = __dirname } = {}) {
 
   fs.mkdirSync(path.join(root, 'datos'), { recursive: true });
 
-  for (const name of ['usuarios', 'catalogos']) {
+  for (const name of ['usuarios', 'catalogos', 'playlists']) {
     const target = path.join(root, 'datos', name + '.json');
     if (!fs.existsSync(target)) fs.writeFileSync(target, '[]\n');
   }
@@ -219,6 +219,48 @@ function createServer({ rootDir = __dirname } = {}) {
     return fields;
   }
 
+  function playlistInfo(playlist) {
+    const catalog = read('catalogos');
+    return {
+      id: playlist.id,
+      title: playlist.title,
+      description: playlist.description,
+      songCount: playlist.songIds.length,
+      items: playlist.songIds.map((id) => {
+        const song = catalog.find((x) => x.type === 'cancion' && x.id === id);
+        return song
+          ? describe(song, catalog)
+          : {
+              id,
+              type: 'cancion',
+              title: 'Canción no disponible',
+              available: false,
+            };
+      }),
+    };
+  }
+  function playlistFields(data) {
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      Array.isArray(data) ||
+      typeof data.title !== 'string' ||
+      !data.title.trim() ||
+      data.title.trim().length > 100
+    )
+      fail(400, 'Ingresá un nombre válido de hasta 100 caracteres.');
+    if (
+      data.description !== undefined &&
+      (typeof data.description !== 'string' ||
+        data.description.trim().length > 500)
+    )
+      fail(400, 'La descripción debe tener hasta 500 caracteres.');
+    return {
+      title: data.title.trim(),
+      description: (data.description || '').trim(),
+    };
+  }
+
   const server = http.createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
 
@@ -243,6 +285,11 @@ function createServer({ rootDir = __dirname } = {}) {
         return res.end(
           JSON.stringify({
             user: publicUser(user),
+            playlists: user
+              ? read('playlists')
+                  .filter((p) => p.ownerEmail === user.email)
+                  .map(playlistInfo)
+              : [],
             catalog: catalog.map((item) => describe(item, catalog)),
           }),
         );
@@ -315,7 +362,43 @@ function createServer({ rootDir = __dirname } = {}) {
         return res.end(JSON.stringify(describe(item, catalog)));
       }
 
-      if (req.method !== 'POST') {
+      const playlistRoute =
+        /^\/api\/playlists(?:\/([^/]+))?(?:\/(songs)(?:\/([^/]+))?)?$/.exec(
+          requestUrl.pathname,
+        );
+      if (playlistRoute) {
+        if (!user) fail(401, 'Iniciá sesión para acceder a tus playlists.');
+        const playlistId = playlistRoute[1]
+          ? decodeURIComponent(playlistRoute[1])
+          : null;
+        if (req.method === 'GET') {
+          if (playlistRoute[2]) fail(405, 'Método no permitido.');
+          const playlists = read('playlists');
+          if (!playlistId)
+            return res.end(
+              JSON.stringify(
+                playlists
+                  .filter((p) => p.ownerEmail === user.email)
+                  .map(playlistInfo),
+              ),
+            );
+          const playlist = playlists.find(
+            (p) => p.id === playlistId && p.ownerEmail === user.email,
+          );
+          if (!playlist) fail(404, 'La playlist no fue encontrada.');
+          return res.end(JSON.stringify(playlistInfo(playlist)));
+        }
+        const allowed = !playlistId
+          ? ['POST']
+          : playlistRoute[2]
+            ? playlistRoute[3]
+              ? ['DELETE']
+              : ['POST']
+            : ['PATCH', 'DELETE'];
+        if (!allowed.includes(req.method)) fail(405, 'Método no permitido.');
+      }
+
+      if (req.method !== 'POST' && !playlistRoute) {
         res.statusCode = 405;
         return res.end(JSON.stringify({ error: 'Método no permitido.' }));
       }
@@ -333,6 +416,59 @@ function createServer({ rootDir = __dirname } = {}) {
           throw Error('Los datos exceden el tamaño permitido.');
       }
       const data = JSON.parse(body || '{}');
+
+      if (playlistRoute) {
+        const playlists = read('playlists');
+        const playlistId = playlistRoute[1]
+          ? decodeURIComponent(playlistRoute[1])
+          : null;
+        if (!playlistId) {
+          const playlist = {
+            id: crypto.randomUUID(),
+            ownerEmail: user.email,
+            ...playlistFields(data),
+            songIds: [],
+          };
+          playlists.push(playlist);
+          write('playlists', playlists);
+          res.statusCode = 201;
+          return res.end(JSON.stringify(playlistInfo(playlist)));
+        }
+        const index = playlists.findIndex(
+          (p) => p.id === playlistId && p.ownerEmail === user.email,
+        );
+        if (index === -1) fail(404, 'La playlist no fue encontrada.');
+        const playlist = playlists[index];
+        if (playlistRoute[2]) {
+          if (req.method === 'POST') {
+            if (!data || typeof data.songId !== 'string' || !data.songId.trim())
+              fail(400, 'Seleccioná una canción válida.');
+            const songId = data.songId.trim();
+            if (
+              !read('catalogos').some(
+                (s) => s.type === 'cancion' && s.id === songId,
+              )
+            )
+              fail(404, 'La canción no fue encontrada.');
+            if (playlist.songIds.includes(songId))
+              fail(409, 'La canción ya está en esta playlist.');
+            playlist.songIds.push(songId);
+          } else {
+            const songId = decodeURIComponent(playlistRoute[3]);
+            if (!playlist.songIds.includes(songId))
+              fail(404, 'La canción no está en esta playlist.');
+            playlist.songIds = playlist.songIds.filter((id) => id !== songId);
+          }
+        } else if (req.method === 'PATCH') {
+          Object.assign(playlist, playlistFields(data));
+        } else {
+          playlists.splice(index, 1);
+          write('playlists', playlists);
+          return res.end(JSON.stringify({ deleted: true }));
+        }
+        write('playlists', playlists);
+        return res.end(JSON.stringify(playlistInfo(playlist)));
+      }
 
       if (req.url === '/api/register') {
         const name = typeof data.name === 'string' ? data.name.trim() : '',
@@ -477,4 +613,3 @@ if (require.main === module) {
   );
 }
 module.exports = { createServer };
-

@@ -233,6 +233,151 @@
       .artist-result {
         display: block !important;
       }
+      body.signed-in main {
+        margin-left: max(100px, calc((100vw - 1000px) / 2));
+        margin-right: 20px;
+      }
+      .library {
+        position: fixed;
+        top: 100px;
+        bottom: 16px;
+        left: 12px;
+        width: 72px;
+        padding: 12px 8px;
+        background: #151b17;
+        border: 1px solid #2a3830;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        z-index: 2;
+      }
+      .library-add {
+        margin: 0;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        font-size: 30px;
+        border-radius: 50%;
+        background: #292f2b;
+        color: #dce6df;
+      }
+      .library-list {
+        list-style: none;
+        margin: 0;
+        padding: 4px;
+        width: 100%;
+        overflow-y: auto;
+        flex: 1;
+      }
+      .library-list li {
+        margin-bottom: 12px;
+      }
+      .library-item {
+        margin: 0;
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(
+          135deg,
+          hsl(var(--hue) 68% 40%),
+          hsl(calc(var(--hue) + 55) 45% 70%)
+        );
+        color: white;
+        font-size: 19px;
+        letter-spacing: 0.04em;
+      }
+      .library-item[aria-pressed='true'] {
+        outline: 3px solid var(--green);
+        outline-offset: 2px;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .playlist-panel {
+        margin-bottom: 24px;
+      }
+      .playlist-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .playlist-header h2 {
+        overflow-wrap: anywhere;
+      }
+      .playlist-description {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .playlist-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .playlist-actions button {
+        margin-top: 0;
+      }
+      button.danger {
+        background: #492c2c;
+        color: #ffcfca;
+      }
+      dialog {
+        width: min(460px, calc(100vw - 32px));
+        max-height: 90vh;
+        overflow-y: auto;
+        background: #18231d;
+        color: #f6faf7;
+        border: 1px solid #4a5c50;
+        border-radius: 18px;
+        padding: 28px;
+      }
+      dialog::backdrop {
+        background: #000a;
+      }
+      dialog textarea {
+        min-height: 100px;
+        font: inherit;
+      }
+      .dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.5;
+      }
+      @media (max-width: 720px) {
+        body.signed-in main {
+          margin-left: 80px;
+          margin-right: 0;
+          padding: 0 12px;
+        }
+        .library {
+          left: 6px;
+          width: 64px;
+          top: 130px;
+          bottom: 8px;
+          padding: 12px 4px;
+        }
+        .playlist-header {
+          flex-wrap: wrap;
+        }
+      }
     </style>
   </head>
   <body>
@@ -241,6 +386,23 @@
       <div id="identity" class="muted">Sin sesión iniciada</div>
       <button id="logout" class="secondary" hidden>Cerrar sesión</button>
     </header>
+    <aside id="library" class="library" aria-label="Tu biblioteca" hidden>
+      <h2 class="sr-only">Tus playlists</h2>
+      <button
+        id="createPlaylist"
+        class="library-add"
+        type="button"
+        aria-label="Crear playlist"
+        title="Crear playlist"
+      >
+        +
+      </button>
+      <ul
+        id="libraryList"
+        class="library-list"
+        aria-label="Playlists creadas"
+      ></ul>
+    </aside>
     <main>
       <div class="tag">Una primera experiencia completa</div>
       <h1>Encontrá tu próxima canción.</h1>
@@ -315,6 +477,46 @@
         </div>
       </section>
       <section id="workspace" hidden>
+        <section
+          id="playlistPanel"
+          class="card playlist-panel"
+          hidden
+          aria-labelledby="playlistTitle"
+        >
+          <div class="playlist-header">
+            <div>
+              <span class="tag">Tu playlist</span>
+              <h2 id="playlistTitle"></h2>
+            </div>
+            <button id="closePlaylist" class="secondary" type="button">
+              Cerrar playlist
+            </button>
+          </div>
+          <p id="playlistDescription" class="muted playlist-description"></p>
+          <p id="playlistCount" class="muted"></p>
+          <div class="playlist-actions">
+            <button id="editPlaylist" class="secondary" type="button">
+              Editar playlist</button
+            ><button id="deletePlaylist" class="danger" type="button">
+              Eliminar playlist
+            </button>
+          </div>
+          <ul
+            id="playlistSongs"
+            class="songs"
+            aria-label="Canciones de la playlist"
+          ></ul>
+          <p id="playlistEmpty" class="muted" hidden>
+            Esta playlist está vacía. Buscá una canción y seleccioná «Agregar a
+            playlist».
+          </p>
+          <div
+            id="playlistStatus"
+            class="status"
+            role="status"
+            aria-live="polite"
+          ></div>
+        </section>
         <div class="card">
           <h2>Explorá el catálogo</h2>
           <form id="search">
@@ -421,6 +623,69 @@
         aria-live="polite"
       ></div>
     </main>
+    <dialog id="playlistDialog" aria-labelledby="playlistDialogTitle">
+      <form id="playlistForm">
+        <h2 id="playlistDialogTitle">Crear playlist</h2>
+        <label for="playlistName">Nombre</label
+        ><input id="playlistName" maxlength="100" required autocomplete="off" />
+        <label for="playlistDescriptionInput">Descripción (opcional)</label
+        ><textarea id="playlistDescriptionInput" maxlength="500"></textarea>
+        <div
+          id="playlistFormStatus"
+          class="status"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <div class="dialog-actions">
+          <button type="button" class="secondary" data-close="playlistDialog">
+            Cancelar</button
+          ><button id="savePlaylist" type="submit">Crear</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="addSongDialog" aria-labelledby="addSongTitle">
+      <form id="addSongForm">
+        <h2 id="addSongTitle">Agregar a playlist</h2>
+        <p id="addSongName" class="muted"></p>
+        <label for="playlistChoice">Elegí una playlist</label
+        ><select id="playlistChoice" required></select>
+        <p id="noPlaylists" class="muted" hidden>
+          Primero creá una playlist con el botón +.
+        </p>
+        <div
+          id="addSongStatus"
+          class="status"
+          role="status"
+          aria-live="polite"
+        ></div>
+        <div class="dialog-actions">
+          <button class="secondary" type="button" data-close="addSongDialog">
+            Cancelar</button
+          ><button id="confirmAddSong" type="submit">Agregar canción</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="deletePlaylistDialog" aria-labelledby="deletePlaylistTitle">
+      <h2 id="deletePlaylistTitle">Eliminar playlist</h2>
+      <p id="deletePlaylistQuestion"></p>
+      <div
+        id="deletePlaylistStatus"
+        class="status"
+        role="status"
+        aria-live="polite"
+      ></div>
+      <div class="dialog-actions">
+        <button
+          class="secondary"
+          type="button"
+          data-close="deletePlaylistDialog"
+        >
+          Cancelar</button
+        ><button id="confirmDeletePlaylist" class="danger" type="button">
+          Eliminar playlist
+        </button>
+      </div>
+    </dialog>
     <script>
       'use strict';
       const $ = (id) => document.getElementById(id);
@@ -439,9 +704,9 @@
         $(id).textContent = text;
         $(id).className = 'status ' + (error ? 'error' : 'success');
       }
-      async function api(path, body) {
+      async function api(path, body, method) {
         const response = await fetch('/api/' + path, {
-          method: body === undefined ? 'GET' : 'POST',
+          method: method || (body === undefined ? 'GET' : 'POST'),
           headers: { 'Content-Type': 'application/json' },
           body: body === undefined ? undefined : JSON.stringify(body),
         });
@@ -452,6 +717,8 @@
       }
       async function refresh() {
         const data = await api('state');
+        if (active?.email !== data.user?.email) resetLibrary();
+        state.playlists = data.playlists || [];
         state.catalog = data.catalog;
         active = data.user;
       }
@@ -494,6 +761,9 @@
       }
       function render() {
         const signed = !!active;
+        document.body.classList.toggle('signed-in', signed);
+        $('library').hidden = !signed;
+        renderLibrary();
         $('auth').hidden = signed;
         $('workspace').hidden = !signed;
         $('logout').hidden = !signed;
@@ -533,7 +803,7 @@
           $('stats').append(node);
         }
       }
-      function songRow(item) {
+      function songRow(item, playlistId = null) {
         const li = document.createElement('li');
         const cover = document.createElement('div');
         cover.className = 'cover';
@@ -547,7 +817,12 @@
         artist.className = 'muted';
         artist.textContent = item.artist;
         info.append(title, artist);
-        li.append(cover, info, playButton(item));
+        li.append(
+          cover,
+          info,
+          playButton(item),
+          playlistId ? removeSongButton(item, playlistId) : addSongButton(item),
+        );
         return li;
       }
       async function findSongs(submitted = true) {
@@ -621,6 +896,266 @@
         );
         for (const item of found) $('results').append(songRow(item));
       }
+
+      let selectedPlaylistId = null,
+        editingPlaylistId = null,
+        pendingSong = null,
+        libraryEpoch = 0;
+      function resetLibrary() {
+        libraryEpoch++;
+        selectedPlaylistId = null;
+        editingPlaylistId = null;
+        pendingSong = null;
+        for (const id of [
+          'playlistDialog',
+          'addSongDialog',
+          'deletePlaylistDialog',
+        ])
+          if ($(id).open) $(id).close();
+        $('playlistPanel').hidden = true;
+        $('playlistSongs').replaceChildren();
+        $('libraryList').replaceChildren();
+      }
+      function renderLibrary() {
+        $('libraryList').replaceChildren();
+        const playlists = state.playlists || [];
+        for (const playlist of playlists) {
+          const li = document.createElement('li');
+          const button = document.createElement('button');
+          button.className = 'library-item';
+          button.type = 'button';
+          button.textContent = playlist.title.slice(0, 2).toUpperCase();
+          button.title = playlist.title;
+          button.setAttribute('aria-label', 'Abrir playlist ' + playlist.title);
+          button.setAttribute(
+            'aria-pressed',
+            String(playlist.id === selectedPlaylistId),
+          );
+          const hue =
+            [...playlist.id].reduce((sum, c) => sum + c.charCodeAt(0), 0) % 360;
+          button.style.setProperty('--hue', hue);
+          button.addEventListener('click', () => openPlaylist(playlist.id));
+          li.append(button);
+          $('libraryList').append(li);
+        }
+        const playlist = playlists.find((p) => p.id === selectedPlaylistId);
+        $('playlistPanel').hidden = !playlist;
+        if (!playlist) {
+          selectedPlaylistId = null;
+          return;
+        }
+        $('playlistTitle').textContent = playlist.title;
+        $('playlistDescription').textContent = playlist.description || '';
+        $('playlistCount').textContent =
+          playlist.songCount +
+          (playlist.songCount === 1 ? ' canción' : ' canciones');
+        $('playlistSongs').replaceChildren();
+        $('playlistEmpty').hidden = playlist.items.length > 0;
+        for (const item of playlist.items)
+          $('playlistSongs').append(songRow(item, playlist.id));
+      }
+      async function openPlaylist(id) {
+        const epoch = ++libraryEpoch;
+        try {
+          const playlist = await api('playlists/' + encodeURIComponent(id));
+          if (epoch !== libraryEpoch || !active) return;
+          state.playlists = (state.playlists || []).map((p) =>
+            p.id === id ? playlist : p,
+          );
+          selectedPlaylistId = id;
+          message('playlistStatus', '');
+          renderLibrary();
+        } catch (err) {
+          if (epoch === libraryEpoch)
+            message('globalStatus', err.message, true);
+        }
+      }
+      async function reloadLibrary() {
+        await refresh();
+        renderLibrary();
+      }
+      function showPlaylistForm(playlist = null) {
+        editingPlaylistId = playlist?.id || null;
+        $('playlistForm').reset();
+        $('playlistName').value = playlist?.title || '';
+        $('playlistDescriptionInput').value = playlist?.description || '';
+        $('playlistDialogTitle').textContent = playlist
+          ? 'Editar playlist'
+          : 'Crear playlist';
+        $('savePlaylist').textContent = playlist ? 'Guardar cambios' : 'Crear';
+        message('playlistFormStatus', '');
+        $('playlistDialog').showModal();
+        $('playlistName').focus();
+      }
+      $('createPlaylist').addEventListener('click', () => showPlaylistForm());
+      $('editPlaylist').addEventListener('click', () => {
+        const playlist = (state.playlists || []).find(
+          (p) => p.id === selectedPlaylistId,
+        );
+        if (playlist) showPlaylistForm(playlist);
+      });
+      $('closePlaylist').addEventListener('click', () => {
+        libraryEpoch++;
+        selectedPlaylistId = null;
+        renderLibrary();
+      });
+      for (const button of document.querySelectorAll('[data-close]'))
+        button.addEventListener('click', () => $(button.dataset.close).close());
+      $('playlistForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const epoch = libraryEpoch,
+          id = editingPlaylistId;
+        $('savePlaylist').disabled = true;
+        try {
+          const result = await api(
+            'playlists' + (id ? '/' + encodeURIComponent(id) : ''),
+            {
+              title: $('playlistName').value,
+              description: $('playlistDescriptionInput').value,
+            },
+            id ? 'PATCH' : 'POST',
+          );
+          if (epoch !== libraryEpoch || !active) return;
+          selectedPlaylistId = result.id;
+          await reloadLibrary();
+          $('playlistDialog').close();
+          message(
+            'playlistStatus',
+            id
+              ? 'Playlist actualizada.'
+              : 'Playlist creada. Buscá canciones para agregarlas.',
+          );
+        } catch (err) {
+          if (epoch === libraryEpoch)
+            message('playlistFormStatus', err.message, true);
+        } finally {
+          $('savePlaylist').disabled = false;
+        }
+      });
+      function addSongButton(song) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary';
+        button.textContent = 'Agregar a playlist';
+        button.setAttribute(
+          'aria-label',
+          'Agregar ' + song.title + ' a una playlist',
+        );
+        button.addEventListener('click', async () => {
+          const epoch = libraryEpoch;
+          button.disabled = true;
+          try {
+            await reloadLibrary();
+            if (epoch !== libraryEpoch || !active) return;
+            pendingSong = song;
+            $('addSongName').textContent = song.title + ' · ' + song.artist;
+            $('playlistChoice').replaceChildren();
+            for (const playlist of state.playlists) {
+              const option = document.createElement('option');
+              option.value = playlist.id;
+              option.textContent = playlist.title;
+              $('playlistChoice').append(option);
+            }
+            if (selectedPlaylistId)
+              $('playlistChoice').value = selectedPlaylistId;
+            $('noPlaylists').hidden = state.playlists.length > 0;
+            $('confirmAddSong').disabled = !state.playlists.length;
+            $('playlistChoice').disabled = !state.playlists.length;
+            message('addSongStatus', '');
+            $('addSongDialog').showModal();
+          } catch (err) {
+            message('globalStatus', err.message, true);
+          } finally {
+            button.disabled = false;
+          }
+        });
+        return button;
+      }
+      $('addSongForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!pendingSong) return;
+        const epoch = libraryEpoch,
+          id = $('playlistChoice').value;
+        $('confirmAddSong').disabled = true;
+        try {
+          await api('playlists/' + encodeURIComponent(id) + '/songs', {
+            songId: pendingSong.id,
+          });
+          if (epoch !== libraryEpoch || !active) return;
+          await reloadLibrary();
+          $('addSongDialog').close();
+          message('globalStatus', 'Canción agregada a la playlist.');
+        } catch (err) {
+          if (epoch === libraryEpoch)
+            message('addSongStatus', err.message, true);
+        } finally {
+          $('confirmAddSong').disabled = false;
+        }
+      });
+      function removeSongButton(song, id) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary';
+        button.textContent = 'Quitar';
+        button.setAttribute(
+          'aria-label',
+          'Quitar ' + song.title + ' de la playlist',
+        );
+        button.addEventListener('click', async () => {
+          const epoch = libraryEpoch;
+          button.disabled = true;
+          try {
+            await api(
+              'playlists/' +
+                encodeURIComponent(id) +
+                '/songs/' +
+                encodeURIComponent(song.id),
+              undefined,
+              'DELETE',
+            );
+            if (epoch !== libraryEpoch || !active) return;
+            await reloadLibrary();
+            message('playlistStatus', 'Canción quitada de la playlist.');
+          } catch (err) {
+            if (epoch === libraryEpoch)
+              message('playlistStatus', err.message, true);
+          } finally {
+            button.disabled = false;
+          }
+        });
+        return button;
+      }
+      $('deletePlaylist').addEventListener('click', () => {
+        const playlist = (state.playlists || []).find(
+          (p) => p.id === selectedPlaylistId,
+        );
+        if (!playlist) return;
+        $('deletePlaylistQuestion').textContent =
+          '¿Eliminar «' +
+          playlist.title +
+          '»? Las canciones seguirán disponibles en el catálogo.';
+        message('deletePlaylistStatus', '');
+        $('deletePlaylistDialog').showModal();
+      });
+      $('confirmDeletePlaylist').addEventListener('click', async () => {
+        const epoch = libraryEpoch,
+          id = selectedPlaylistId;
+        if (!id) return;
+        $('confirmDeletePlaylist').disabled = true;
+        try {
+          await api('playlists/' + encodeURIComponent(id), undefined, 'DELETE');
+          if (epoch !== libraryEpoch || !active) return;
+          selectedPlaylistId = null;
+          await reloadLibrary();
+          $('deletePlaylistDialog').close();
+          message('globalStatus', 'Playlist eliminada.');
+        } catch (err) {
+          if (epoch === libraryEpoch)
+            message('deletePlaylistStatus', err.message, true);
+        } finally {
+          $('confirmDeletePlaylist').disabled = false;
+        }
+      });
 
       const audio = $('audio');
       function updateVolume() {
@@ -850,6 +1385,8 @@
         try {
           await api('logout', {});
           stopPlayback();
+          resetLibrary();
+          state.playlists = [];
           active = null;
           searchVersion++;
           $('query').value = '';
@@ -967,4 +1504,3 @@
     </script>
   </body>
 </html>
-
