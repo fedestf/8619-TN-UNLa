@@ -161,7 +161,9 @@ Trabajo práctico de Proyecto de Software 2026 · 8619 TN · UNLa.
 
 - Listado inicial de canciones reproducibles al iniciar sesión, sin tener que buscar primero.
 - Filtros superiores Todo, Canciones, Artistas, Álbumes y Playlists.
-- Búsqueda sobre el filtro activo y opción Limpiar filtros para volver al listado completo.
+- Filtrado mientras se escribe sobre el filtro activo, sin necesidad de presionar Buscar.
+- Breve espera al escribir para agrupar consultas y descarte de respuestas antiguas.
+- Restauración del contenido al borrar el texto y opción Limpiar filtros para volver al listado completo.
 - Consulta autenticada mediante `GET /api/content/available?type=all&q=texto`.
 - Exclusión de canciones sin archivo de audio o marcadas como no disponibles.
 - Listado general con playlists propias que contienen canciones disponibles; el filtro Playlists también permite encontrar listas vacías.
